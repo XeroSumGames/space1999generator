@@ -180,10 +180,44 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 .footer{text-align:center;padding:26px 20px 40px;font-size:12px;color:#5a6e88;line-height:1.6}
 .footer b{color:var(--steel)}
 
+/* PRINT SHEET - official Space: 1999 layout (hidden on screen, shown in print) */
+#printsheet{display:none}
+.ps-page{color:#111;background:#f8f6f0;border:3px solid #111;border-radius:22px;padding:20px 20px 12px;font-family:var(--ff-d);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ps-lbl{font-weight:800;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:#111;margin:0 0 3px 5px}
+.ps-box{border:2.5px solid #111;border-radius:14px;padding:6px 12px;min-height:32px}
+.ps-box.pill{border-radius:22px}
+.ps-val{font-size:15px;color:#111;line-height:1.35;word-break:break-word}
+.ps-field{display:flex;flex-direction:column}
+.ps-head{display:grid;grid-template-columns:1fr 232px;gap:14px;align-items:start}
+.ps-headL{display:flex;flex-direction:column;gap:10px}
+.ps-nrow{display:grid;grid-template-columns:1.7fr 1fr;gap:12px}
+.ps-drow{display:grid;grid-template-columns:1fr 62px 62px;gap:12px}
+.ps-logo{text-align:right;padding-top:6px}
+.ps-logo .l1{font-weight:800;font-size:33px;letter-spacing:.01em;color:#111;line-height:.9;font-style:italic}
+.ps-logo .l2{font-weight:700;font-size:11px;letter-spacing:.2em;color:#111;margin-top:5px}
+.ps-row3{display:grid;grid-template-columns:80px 1.1fr 1.35fr;gap:12px;margin-top:12px}
+.ps-table{margin-top:14px;border:2.5px solid #111;border-radius:14px;overflow:hidden}
+.ps-thead,.ps-trow{display:grid;grid-template-columns:1.15fr 44px 1.15fr 44px 3fr;align-items:center}
+.ps-thead{background:#111;color:#f8f6f0;font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ps-thead>div,.ps-trow>div{padding:7px 10px}
+.ps-thead>div{text-align:center}
+.ps-trow{border-top:2px solid #111;font-size:14px}
+.ps-trow>div{text-align:left}
+.ps-trow>div.ps-sc{text-align:center;font-weight:800;font-size:16px}
+.ps-trow>div.ps-foc{font-size:12.5px;color:#222}
+.ps-bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.ps-talents{min-height:210px}
+.ps-rcol{display:flex;flex-direction:column;gap:12px}
+.ps-tal{font-size:12.5px;margin-bottom:7px;line-height:1.32;color:#222}
+.ps-tal b{font-weight:800;color:#111}
+.ps-foot{text-align:center;font-size:10px;font-style:italic;color:#444;margin-top:12px}
+
 @media print{
-  body{background:#fff;color:#000}
-  .step-track,.nav-row,.hdr-rand,.footer .no-print{display:none}
-  .dossier{border-color:#999}
+  @page{size:letter;margin:10mm}
+  html,body{background:#fff}
+  .hdr,.step-track,.nav-row,.hdr-rand,.footer,.dossier{display:none!important}
+  .main{max-width:none;margin:0;padding:0}
+  #printsheet{display:block!important}
 }
 </style>
 
@@ -290,6 +324,10 @@ var FOCUS_GROUPS = [
 ];
 
 // TALENTS -- tag: null | 'skill' | 'attitude'
+// map each focus to the skill row it sits on in the printed sheet (General -> null, falls to Science)
+var FOCUS_SKILL = {};
+FOCUS_GROUPS.forEach(function(g){ var sk = g.g==='General' ? null : g.g.toLowerCase(); g.items.forEach(function(it){ FOCUS_SKILL[it.replace(/\*$/,'')] = sk; }); });
+
 var TALENTS = [
   {n:'Advisor', tag:'skill', d:'When you assist an ally using the chosen skill, they may re-roll a single d20 in their pool.'},
   {n:'Alpha Knowledge', tag:null, d:'You always have the asset ‘Map of Alpha’ in your head; use it whenever a map would help.'},
@@ -380,7 +418,7 @@ var S = {
   talents:[],                             // [{name, bind}]
   hope:null, hopeCustom:'',
   traitPro:'', traitPer:'',
-  signature:'', assignment:'', name:''
+  signature:'', assignment:'', name:'', pronouns:''
 };
 function resetAlloc(){
   S.bonus={}; SKILLS.forEach(function(s){S.bonus[s.k]=0;});
@@ -697,6 +735,8 @@ function renderFinishing(){
   // Name
   h+='<div class="fblock wide"><div class="fb-title">Name<button class="roll-btn" onclick="randName()">&#9862;</button></div>'+
      '<input class="name-inp" placeholder="Character name" value="'+esc(S.name)+'" oninput="S.name=this.value;refreshNav()">'+
+     '<label class="lbl">Pronouns (optional)</label>'+
+     '<input class="txt" placeholder="e.g. she/her, they/them" value="'+esc(S.pronouns)+'" oninput="S.pronouns=this.value">'+
      '<div class="hint">Alpha is diverse -- any name and background is welcome.</div></div>';
 
   h+='</div>'+nav();
@@ -759,9 +799,61 @@ function renderDossier(){
   h+='<div class="nav-row"><button class="btn-s" onclick="prev()">&larr; Back</button>'+
      '<div style="display:flex;gap:10px"><button class="btn-s danger" onclick="startOver()">Start Over</button>'+
      '<button class="btn-p" onclick="window.print()">Print Dossier</button></div></div>';
+  h+=printSheet();
   main.innerHTML=h;
 }
-function startOver(){ S={step:0,dept:null,sk6:null,sk5:null,bonus:{},att:{},focuses:[],talents:[],hope:null,hopeCustom:'',traitPro:'',traitPer:'',signature:'',assignment:'',name:''}; resetAlloc(); render(); window.scrollTo(0,0); }
+// Print output matches the official Space: 1999 printer-friendly character sheet.
+function printSheet(){
+  var d=DEPT_M[S.dept];
+  var hopeTxt=S.hope||S.hopeCustom||'';
+  var hopeDesc=S.hope ? ((HOPES.find(function(x){return x.n===S.hope;})||{}).d||'') : '';
+  var byskill={command:[],flight:[],medical:[],science:[],security:[],technical:[]};
+  S.focuses.forEach(function(f){
+    var base=f.name.replace(/\*$/,'');
+    var disp=base+(f.star&&f.spec?' ('+f.spec+')':'');
+    var sk=FOCUS_SKILL[base];
+    if(sk&&byskill[sk]) byskill[sk].push(disp); else byskill.science.push(disp);
+  });
+  var deptAssign=esc(d.n)+(S.assignment?'&nbsp;&nbsp;/&nbsp;&nbsp;'+esc(S.assignment):'');
+  var traits=[S.traitPro,S.traitPer].filter(function(x){return x&&x.trim();}).map(esc).join(', ');
+  var rows='';
+  for(var i=0;i<6;i++){
+    var a=ATTITUDES[i], s=SKILLS[i];
+    rows+='<div class="ps-trow"><div>'+esc(a.n)+'</div><div class="ps-sc">'+attTotal(a.k)+'</div>'+
+          '<div>'+esc(s.n)+'</div><div class="ps-sc">'+skTotal(s.k)+'</div>'+
+          '<div class="ps-foc">'+byskill[s.k].map(esc).join(', ')+'</div></div>';
+  }
+  var tal=S.talents.map(function(t){ var td=TALENT_M[t.name]||{}; var nm=(td.n||t.name)+(t.bind?' ('+t.bind+')':''); return '<div class="ps-tal"><b>'+esc(nm)+'</b> '+(td.d||'')+'</div>'; }).join('');
+  var h='<div class="ps-page">';
+  h+='<div class="ps-head"><div class="ps-headL">'+
+     '<div class="ps-nrow">'+
+       '<div class="ps-field"><div class="ps-lbl">Name</div><div class="ps-box pill ps-val">'+esc(S.name||'')+'</div></div>'+
+       '<div class="ps-field"><div class="ps-lbl">Pronouns</div><div class="ps-box pill ps-val">'+esc(S.pronouns||'')+'</div></div>'+
+     '</div>'+
+     '<div class="ps-drow">'+
+       '<div class="ps-field"><div class="ps-lbl">Department / Assignment</div><div class="ps-box pill ps-val">'+deptAssign+'</div></div>'+
+       '<div class="ps-field"><div class="ps-lbl">XP</div><div class="ps-box pill ps-val" style="text-align:center">0</div></div>'+
+       '<div class="ps-field"><div class="ps-lbl">PP</div><div class="ps-box pill ps-val" style="text-align:center">0</div></div>'+
+     '</div></div>'+
+     '<div class="ps-logo"><div class="l1">SPACE: 1999</div><div class="l2">THE ROLEPLAYING GAME</div></div>'+
+     '</div>';
+  h+='<div class="ps-row3">'+
+     '<div class="ps-field"><div class="ps-lbl">Spirit</div><div class="ps-box ps-val" style="text-align:center;font-weight:800;font-size:20px">'+spirit()+'</div></div>'+
+     '<div class="ps-field"><div class="ps-lbl">Traits</div><div class="ps-box ps-val">'+traits+'</div></div>'+
+     '<div class="ps-field"><div class="ps-lbl">Hope</div><div class="ps-box ps-val">'+(hopeTxt?('<b>'+esc(hopeTxt)+'</b>'+(hopeDesc?' -- '+esc(hopeDesc):'')):'')+'</div></div>'+
+     '</div>';
+  h+='<div class="ps-table"><div class="ps-thead"><div>Attitude</div><div>Score</div><div>Skill</div><div>Score</div><div>Focuses</div></div>'+rows+'</div>';
+  h+='<div class="ps-bottom">'+
+     '<div class="ps-field"><div class="ps-lbl">Talents</div><div class="ps-box ps-talents">'+tal+'</div></div>'+
+     '<div class="ps-rcol">'+
+       '<div class="ps-field"><div class="ps-lbl">Signature Asset</div><div class="ps-box ps-val" style="min-height:84px">'+esc(S.signature||'')+'</div></div>'+
+       '<div class="ps-field"><div class="ps-lbl">Assets</div><div class="ps-box ps-val" style="min-height:104px"></div></div>'+
+     '</div></div>';
+  h+='<div class="ps-foot">Space: 1999 (TM) and (c) ITC Entertainment Group 1975 and 2025. Licensed by ITV Studios Limited. Unofficial fan-made sheet.</div>';
+  h+='</div>';
+  return '<div id="printsheet">'+h+'</div>';
+}
+function startOver(){ S={step:0,dept:null,sk6:null,sk5:null,bonus:{},att:{},focuses:[],talents:[],hope:null,hopeCustom:'',traitPro:'',traitPer:'',signature:'',assignment:'',name:'',pronouns:''}; resetAlloc(); render(); window.scrollTo(0,0); }
 
 // ============================================================
 // RANDOMISERS
