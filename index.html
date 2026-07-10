@@ -1,12 +1,12 @@
 <title>Space: 1999 -- Character Generator</title>
 <style>
 :root{
-  /* Moonbase Alpha computer-console palette: matte-black panels, brushed steel,
-     Command red primary, amber CRT readouts, Security purple secondary. */
-  --void:#0a0d12;--surface:#111620;--panel:#161d28;--card:#1d2532;--card-ho:#27313f;
-  --eagle:#e5372b;--eagle-dim:#a52a20;--amber:#ffb23d;--steel:#aebccd;--moon:#f1f6fb;
-  --dust:#ffffff;--line:#31425a;--good:#4bd07f;--danger:#e0483f;--psi:#a06ad6;
-  --dim:#8492a6;--chrome:#5a6e86;--chrome-hi:#7d90a6;--red:#e5372b;--purple:#a06ad6;
+  /* Moonbase Alpha bright palette: warm eggshell walls, dark charcoal ink,
+     Command red primary, Security purple, brushed-metal edges. */
+  --void:#e7e1d3;--surface:#f1ecdf;--panel:#f4efe3;--card:#f9f5ec;--card-ho:#ece4d3;
+  --eagle:#c9392a;--eagle-dim:#9c2a1e;--amber:#c85a14;--steel:#413a30;--moon:#211c14;
+  --dust:#17130d;--line:#b9ab90;--good:#2f8f52;--danger:#c23a2f;--psi:#7a4bad;
+  --dim:#877c68;--chrome:#a99d84;--chrome-hi:#d8cfb8;--red:#c9392a;--purple:#7a4bad;
   --ff-d:"Eurostile","Microgramma","Bank Gothic","Agency FB","Square721 BT","Helvetica Neue",Arial,sans-serif;
   --ff-m:"Courier New",Courier,monospace;
   --ff-b:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -15,15 +15,13 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size:16px;line-height:1.5;min-height:100vh}
 ::selection{background:var(--eagle);color:#fff}
-/* CRT amber glow on data readouts + lit pool cells */
-.pool-rem,.s-v,.al-total:not(.base),.sk-total,.spirit-num,.ah-die{text-shadow:0 0 8px rgba(255,178,61,.4)}
-.die-pip:not(.used){box-shadow:0 0 6px rgba(255,178,61,.45)}
-/* subtle CRT scanlines behind the header + red brand glow */
-.hdr{background-image:linear-gradient(180deg,var(--surface),var(--void)),repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
-.hdr-title{text-shadow:0 0 16px rgba(229,55,43,.45)}
-/* brushed-steel sheen + rounder portal geometry on major containers */
-.dept-card,.panel,.pool-bar,.fblock,.dossier{border-radius:9px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-.dept-card.selected{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px var(--eagle-dim)}
+/* Bright Moonbase readouts: Command red data, warm header, floating housings */
+.s-v,.al-total:not(.base),.sk-total,.spirit-num,.pool-rem,.ah-die{color:var(--eagle)}
+.hdr-rand,.roll-btn{color:var(--eagle)}
+.hdr{background:var(--surface);border-bottom:1px solid var(--line)}
+.dept-card,.panel,.pool-bar,.fblock,.dossier{border-radius:10px;box-shadow:0 1px 3px rgba(70,52,28,.12)}
+.dept-card:hover{box-shadow:0 3px 10px rgba(70,52,28,.18)}
+.dept-card.selected{box-shadow:0 0 0 2px var(--eagle),0 3px 10px rgba(70,52,28,.18)}
 
 /* HEADER */
 .hdr{background:linear-gradient(180deg,var(--surface),var(--void));border-bottom:1px solid var(--line);padding:16px 24px;text-align:center;position:relative}
