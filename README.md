@@ -44,7 +44,9 @@ choice); Spirit = 4 + 1 per Attitude of 7+ (+1 with Strong Will).
 
 ## Legal
 
-Space: 1999 (c) Anderson Entertainment Ltd. The Space: 1999 Roleplaying Game is
-published by Modiphius Entertainment. This is an unofficial fan-made tool, not
-affiliated with or endorsed by the rights holders. All game rules and content
-remain the property of their respective owners.
+Space: 1999 (TM) and (c) ITC Entertainment Group 1975 and 2025, licensed by ITV
+Studios Limited. All Rights Reserved. Space: 1999 The Roleplaying Game is
+published by Anderson Entertainment; the 2d20 system is (c) Modiphius
+Entertainment Ltd. This is an unofficial, fan-made tool, not affiliated with or
+endorsed by the rights holders. All game rules and content remain the property
+of their respective owners.
