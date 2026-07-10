@@ -1,0 +1,871 @@
+<title>Space: 1999 -- Character Generator</title>
+<style>
+:root{
+  --void:#05070c;--surface:#0c1119;--panel:#121a26;--card:#182234;--card-ho:#213048;
+  --eagle:#ff7a1a;--eagle-dim:#b8590f;--amber:#ffb84d;--steel:#9fb4cf;--moon:#eef4fb;
+  --dust:#ffffff;--line:#28374f;--good:#4f9d6a;--danger:#c1443f;--psi:#7b52a8;
+  --ff-d:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --ff-m:"Courier New",Courier,monospace;
+  --ff-b:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:3px;--tr:.15s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size:16px;line-height:1.5;min-height:100vh}
+::selection{background:var(--eagle);color:var(--void)}
+
+/* HEADER */
+.hdr{background:linear-gradient(180deg,var(--surface),var(--void));border-bottom:1px solid var(--line);padding:16px 24px;text-align:center;position:relative}
+.hdr-title{font-family:var(--ff-d);font-size:23px;letter-spacing:.34em;color:var(--eagle);text-transform:uppercase;font-weight:700}
+.hdr-sub{font-size:12px;letter-spacing:.3em;color:var(--dust);text-transform:uppercase;margin-top:4px;font-family:var(--ff-m)}
+.hdr-rand{position:absolute;right:18px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--eagle-dim);border-radius:var(--r);color:var(--amber);font-family:var(--ff-m);font-size:12px;letter-spacing:.1em;padding:8px 12px;cursor:pointer;transition:all var(--tr);text-transform:uppercase}
+.hdr-rand:hover{background:var(--eagle-dim);color:var(--void)}
+@media(max-width:640px){.hdr-rand{position:static;transform:none;display:block;margin:12px auto 0}}
+
+/* STEP TRACK */
+.step-track{display:flex;justify-content:center;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto}
+.step-item{display:flex;align-items:center;gap:8px;padding:12px 20px;font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:#5a6e88;text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr);cursor:default}
+.step-item.active{color:var(--eagle);border-bottom-color:var(--eagle)}
+.step-item.done{color:var(--good);border-bottom-color:var(--good)}
+.step-item.clickable{cursor:pointer}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;border:1px solid currentColor;font-size:12px;flex-shrink:0}
+
+/* MAIN */
+.main{max-width:920px;margin:0 auto;padding:26px 20px 72px}
+.step-intro{margin-bottom:20px}
+.step-h{font-family:var(--ff-d);font-size:21px;color:var(--moon);letter-spacing:.02em;margin-bottom:5px}
+.step-p{font-size:14px;color:var(--steel);max-width:70ch}
+.step-p b{color:var(--amber);font-weight:600}
+
+/* CHIPS / COUNT */
+.tally{display:inline-flex;align-items:center;gap:7px;font-family:var(--ff-m);font-size:13px;letter-spacing:.1em;color:var(--eagle);border:1px solid var(--eagle-dim);border-radius:var(--r);padding:4px 10px;text-transform:uppercase}
+.tally.ok{color:var(--good);border-color:var(--good)}
+.tally.bad{color:var(--danger);border-color:var(--danger)}
+
+/* DEPARTMENT CARDS */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px}
+.dept-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:0;cursor:pointer;transition:all var(--tr);position:relative;overflow:hidden}
+.dept-card:hover{background:var(--card-ho);border-color:var(--eagle-dim)}
+.dept-card.selected{background:var(--card);border-color:var(--eagle);box-shadow:0 0 0 1px var(--eagle-dim)}
+.dept-sleeve{height:6px;width:100%}
+.dept-body{padding:14px 15px 16px}
+.dept-name{font-family:var(--ff-d);font-size:17px;color:var(--moon);margin-bottom:3px;font-weight:600}
+.dept-sleeve-lbl{font-family:var(--ff-m);font-size:12px;letter-spacing:.08em;color:var(--dust);margin-bottom:8px}
+.dept-sleeve-lbl span{color:var(--steel)}
+.dept-desc{font-size:13px;color:var(--dust);line-height:1.42;margin-bottom:11px}
+.dept-spec{font-family:var(--ff-m);font-size:13px;color:var(--steel);margin-bottom:6px}
+.dept-spec b{color:var(--eagle);font-weight:600}
+.dept-sug{font-size:12px;color:var(--dust);border-top:1px solid var(--line);padding-top:8px;line-height:1.4}
+.dept-sug b{color:var(--steel);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.sel-badge{position:absolute;top:10px;right:10px;width:20px;height:20px;background:var(--good);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700}
+
+/* POOL BAR */
+.pool-bar{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 18px;margin-bottom:18px;flex-wrap:wrap}
+.pool-label{font-family:var(--ff-m);font-size:12px;letter-spacing:.14em;color:var(--eagle);text-transform:uppercase;white-space:nowrap}
+.pool-dice{display:flex;gap:5px;flex-wrap:wrap}
+.die-pip{width:24px;height:24px;border-radius:3px;border:1px solid var(--eagle);background:var(--eagle);display:flex;align-items:center;justify-content:center;font-family:var(--ff-m);font-size:12px;font-weight:bold;color:var(--void);transition:all var(--tr)}
+.die-pip.used{background:transparent;border-color:var(--line);color:#5a6e88}
+.pool-rem{font-family:var(--ff-m);font-size:22px;color:var(--eagle);font-weight:bold;margin-left:auto}
+.pool-rem.done{color:var(--good)}
+.pool-rem small{font-size:12px;color:var(--dust);font-weight:normal}
+
+/* ALLOC PANEL */
+.panel{margin-bottom:16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.panel-hdr{background:var(--surface);padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel-hdr .ph-name{font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:var(--eagle);text-transform:uppercase}
+.panel-hdr .ph-note{font-size:12px;color:var(--dust);margin-left:auto}
+.panel-hdr .roll-btn{margin-left:auto}
+.alloc-row{display:flex;align-items:center;padding:9px 16px;border-bottom:1px solid var(--line);gap:12px}
+.alloc-row:last-child{border-bottom:none}
+.al-name{flex:1;font-size:14px;color:var(--moon)}
+.al-name .al-sub{font-family:var(--ff-m);font-size:12px;color:var(--dust);margin-left:6px}
+.al-spec{font-family:var(--ff-m);font-size:12px;color:var(--eagle);border:1px solid var(--eagle-dim);border-radius:2px;padding:1px 6px;letter-spacing:.06em;margin-left:6px;text-transform:uppercase}
+.al-total{font-family:var(--ff-m);font-size:19px;color:var(--amber);width:34px;text-align:center;font-weight:bold}
+.al-total.base{color:#5a6e88}
+.stepper{display:flex;gap:4px}
+.sb{width:32px;height:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--steel);font-family:var(--ff-m);font-size:15px;cursor:pointer;transition:all var(--tr)}
+.sb:hover:not(:disabled){background:var(--card-ho);color:var(--moon)}
+.sb:disabled{opacity:.25;cursor:not-allowed}
+.pick6,.pick5{display:flex;gap:5px}
+.tag-btn{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--steel);font-family:var(--ff-m);font-size:12px;padding:4px 9px;cursor:pointer;transition:all var(--tr);letter-spacing:.06em}
+.tag-btn:hover{background:var(--card-ho);color:var(--moon)}
+.tag-btn.on{background:var(--eagle-dim);border-color:var(--eagle);color:var(--void);font-weight:bold}
+.tag-btn:disabled{opacity:.3;cursor:not-allowed}
+.rule-line{padding:10px 16px;font-size:13px;color:var(--dust);background:var(--surface);border-top:1px solid var(--line)}
+.rule-line b{color:var(--amber)}
+
+.roll-btn{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--eagle-dim);border-radius:var(--r);color:var(--amber);font-family:var(--ff-m);font-size:12px;letter-spacing:.08em;padding:5px 11px;cursor:pointer;transition:all var(--tr);text-transform:uppercase}
+.roll-btn:hover{background:var(--eagle-dim);color:var(--void)}
+
+/* PICK LISTS (focus/talent) */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.pick-group{margin-bottom:14px}
+.pg-title{font-family:var(--ff-m);font-size:12px;letter-spacing:.14em;color:var(--eagle);text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.pick{display:flex;align-items:flex-start;gap:9px;padding:7px 9px;border-radius:var(--r);cursor:pointer;transition:background var(--tr);border:1px solid transparent}
+.pick:hover{background:var(--panel)}
+.pick.on{background:var(--card);border-color:var(--eagle-dim)}
+.pick.disabled{opacity:.4;cursor:not-allowed}
+.pick.disabled:hover{background:transparent}
+.pk-box{width:17px;height:17px;border-radius:3px;border:1px solid var(--line);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--void)}
+.pick.on .pk-box{background:var(--eagle);border-color:var(--eagle)}
+.pk-main{flex:1}
+.pk-name{font-size:14px;color:var(--moon)}
+.pk-name .dept-star{color:var(--eagle);font-family:var(--ff-m);font-size:12px;margin-left:5px;letter-spacing:.06em}
+.pk-tag{font-family:var(--ff-m);font-size:12px;color:var(--psi);margin-left:5px}
+.pk-desc{font-size:12px;color:var(--dust);line-height:1.4;margin-top:2px}
+.pk-bind{margin-top:6px}
+.spec-inp,.bind-sel,.txt,.sel{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--moon);font-family:var(--ff-b);font-size:14px;padding:7px 10px;outline:none;transition:border-color var(--tr)}
+.spec-inp{margin-top:5px}
+.txt:focus,.sel:focus,.spec-inp:focus,.bind-sel:focus{border-color:var(--eagle)}
+.bind-sel{font-family:var(--ff-m);font-size:13px;padding:5px 8px}
+.sel option,.bind-sel option{background:var(--surface)}
+
+/* FINISHING */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.fin-grid{grid-template-columns:1fr}}
+.fblock{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.fblock.wide{grid-column:1/-1}
+.fb-title{font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:var(--eagle);text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.fb-title .roll-btn{margin-left:auto}
+.spirit-big{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.spirit-num{font-family:var(--ff-m);font-size:40px;color:var(--eagle);font-weight:bold;line-height:1}
+.spirit-calc{font-size:13px;color:var(--dust)}
+.hint{font-size:12px;color:var(--dust);margin-top:6px;line-height:1.4}
+.name-inp{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--moon);font-family:var(--ff-d);font-size:20px;padding:11px 13px;outline:none;transition:border-color var(--tr);font-weight:600}
+.name-inp:focus{border-color:var(--eagle)}
+.name-inp::placeholder{color:#4a5c74}
+.lbl{font-size:13px;color:var(--steel);margin:10px 0 5px;display:block}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:20px;color:var(--dust);font-size:13px;padding:4px 11px;cursor:pointer;transition:all var(--tr)}
+.chip:hover{background:var(--card-ho);color:var(--moon);border-color:var(--eagle-dim)}
+.picked-desc{font-size:13px;color:var(--dust);font-style:italic;padding:9px 11px;background:var(--surface);border-radius:var(--r);border-left:2px solid var(--eagle-dim);line-height:1.45;margin-top:8px}
+
+/* NAV */
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:28px;gap:14px}
+.btn-p{background:var(--eagle);border:none;border-radius:var(--r);color:var(--void);font-family:var(--ff-m);font-size:13px;letter-spacing:.14em;padding:12px 28px;text-transform:uppercase;cursor:pointer;transition:all var(--tr);font-weight:bold}
+.btn-p:hover:not(:disabled){background:var(--amber)}
+.btn-p:disabled{opacity:.32;cursor:not-allowed}
+.btn-s{background:transparent;border:1px solid var(--line);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:13px;letter-spacing:.14em;padding:12px 26px;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
+.btn-s:hover{border-color:var(--eagle-dim);color:var(--moon)}
+.btn-s.danger:hover{border-color:var(--danger);color:var(--danger)}
+
+/* DOSSIER */
+.dossier{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.dos-sleeve{height:8px;width:100%}
+.dos-hdr{background:var(--surface);padding:20px 26px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap}
+.dos-name{font-family:var(--ff-d);font-size:28px;color:var(--eagle);font-weight:700;letter-spacing:.01em}
+.dos-role{font-family:var(--ff-m);font-size:13px;letter-spacing:.14em;color:var(--steel);text-transform:uppercase;margin-top:4px}
+.dos-badge{font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:var(--dust);text-transform:uppercase;padding:6px 12px;border:1px solid var(--line);border-radius:var(--r);align-self:flex-start;white-space:nowrap}
+.dos-sec{padding:17px 26px;border-bottom:1px solid var(--line)}
+.dos-sec:last-child{border-bottom:none}
+.dos-sec-title{font-family:var(--ff-m);font-size:12px;letter-spacing:.24em;color:var(--eagle);text-transform:uppercase;margin-bottom:12px}
+.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media(max-width:640px){.stat-grid{grid-template-columns:repeat(3,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:9px 6px;text-align:center}
+.stat .s-l{font-family:var(--ff-m);font-size:12px;color:var(--dust);letter-spacing:.06em;display:block;text-transform:uppercase}
+.stat .s-v{font-family:var(--ff-m);font-size:24px;color:var(--amber);display:block;font-weight:bold;line-height:1.2}
+.stat.hi .s-v{color:var(--eagle)}
+.dos-list{list-style:none}
+.dos-list li{font-size:14px;color:var(--moon);padding:6px 0;border-bottom:1px solid rgba(40,55,79,.5);line-height:1.4}
+.dos-list li:last-child{border-bottom:none}
+.dos-list li b{color:var(--eagle);font-weight:600}
+.dos-list li .dl-desc{color:var(--dust);font-size:13px;display:block;margin-top:2px}
+.dos-kv{display:flex;flex-wrap:wrap;gap:8px 26px}
+.dos-kv div{font-size:14px;color:var(--moon)}
+.dos-kv b{color:var(--steel);font-family:var(--ff-m);font-size:12px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:1px}
+.dos-narr{font-size:14px;color:var(--steel);line-height:1.55;font-style:italic}
+.spirit-pips{display:inline-flex;gap:4px;vertical-align:middle}
+.sp-pip{width:16px;height:16px;border-radius:50%;border:1px solid var(--eagle);background:var(--eagle)}
+
+.footer{text-align:center;padding:26px 20px 40px;font-size:12px;color:#5a6e88;line-height:1.6}
+.footer b{color:var(--steel)}
+
+@media print{
+  body{background:#fff;color:#000}
+  .step-track,.nav-row,.hdr-rand,.footer .no-print{display:none}
+  .dossier{border-color:#999}
+}
+</style>
+
+<div class="hdr">
+  <div class="hdr-title">Space: 1999</div>
+  <div class="hdr-sub">Moonbase Alpha &middot; Personnel Dossier Generator</div>
+  <button class="hdr-rand" onclick="randomiseAll()">&#9862; Randomise</button>
+</div>
+
+<div class="step-track" id="track"></div>
+
+<div class="main" id="main"></div>
+
+<div class="footer">
+  <div><b>Space: 1999 -- Character Generator.</b> An unofficial fan tool.</div>
+  <div class="no-print" id="copyright" style="margin-top:5px">Space: 1999 (c) Anderson Entertainment Ltd. The Space: 1999 Roleplaying Game is published by Modiphius Entertainment. This is an unofficial fan-made character generator, not affiliated with or endorsed by the rights holders. All game rules and content remain the property of their respective owners.</div>
+</div>
+
+<script>
+// ============================================================
+// DATA -- all derived from the Space: 1999 RPG (Modiphius 2d20)
+// Creating a Character chapter (book pp.86-133).
+// ============================================================
+
+var SKILLS = [
+  {k:'command',   n:'Command',   sub:'Charm'},
+  {k:'flight',    n:'Flight',    sub:'Athletics'},
+  {k:'medical',   n:'Medical',   sub:'Cool'},
+  {k:'science',   n:'Science',   sub:'Education'},
+  {k:'security',  n:'Security',  sub:'Strength / Perception'},
+  {k:'technical', n:'Technical', sub:'Practical Intelligence / Dexterity'}
+];
+var SKILL_N = {command:'Command',flight:'Flight',medical:'Medical',science:'Science',security:'Security',technical:'Technical'};
+
+var ATTITUDES = [
+  {k:'bravery',      n:'Bravery',      d:'When you are in direct danger.'},
+  {k:'compassion',   n:'Compassion',   d:'When others’ lives depend on the outcome.'},
+  {k:'dedication',   n:'Dedication',   d:'When time is a factor or you must keep your head in a crisis.'},
+  {k:'improvisation',n:'Improvisation',d:'When you lack the right tools or resources.'},
+  {k:'mystery',      n:'Mystery',      d:'When doing something new or outside your comfort zone.'},
+  {k:'perseverance', n:'Perseverance', d:'When endurance is a factor.'}
+];
+var ATT_N = {bravery:'Bravery',compassion:'Compassion',dedication:'Dedication',improvisation:'Improvisation',mystery:'Mystery',perseverance:'Perseverance'};
+
+// sleeve colour swatches
+var SL = {black:'#1a1a1a',red:'#c0392b',yellow:'#e6b400',orange:'#ff7a1a',brown:'#8a5a2b',purple:'#7b52a8',white:'#eef4fb',none:'#4a5c74'};
+
+var DEPTS = [
+  {k:'command', n:'Commander / Main Mission', sleeve:'Black (Commander) / Red (Main Mission)', sw:'red',
+    desc:'The Base Commander and their lieutenants in Main Mission. Once orders come down, they run the base to see them carried out.',
+    spec:['command','flight'],
+    focuses:['Bureaucracy','Composure','Data Analysis','Diplomacy','Leadership','Strategy'],
+    talents:['Bold','Computer Priority','Driven','Inspire','Inspire Trust','Remote Pilot'],
+    assign:['Flight commander','Main Mission commander','Weapons commander','Defence commander','Damage control officer','Base coordination officer','Departmental liaison officer']},
+  {k:'service', n:'Service', sleeve:'Yellow', sw:'yellow',
+    desc:'Support staff who manage the details and make sure the job gets done -- from mission parameters to damage control to making the coffee.',
+    spec:['command','technical'],
+    focuses:['Bureaucracy','Computer Operation','Empathy','Listening','Observe','Self-control'],
+    talents:['Advisor','Broad Education','Cool Under Pressure','Nice Cup of Tea','Peacemaker','Well Prepared'],
+    assign:['Receptionist (corridor desk)','Main Mission support','Stocks and supplies clerk','Personal secretary','Main Mission scanner operative','Communications technician']},
+  {k:'flight', n:'Flight', sleeve:'Orange', sw:'orange',
+    desc:'The pilots who operate and maintain the fleet of Eagle spacecraft -- always on the front line for defence and first contact.',
+    spec:['flight','technical'],
+    focuses:['Drive','Observe','Precision','Spacecraft Repair','Space Pilot','Tactics'],
+    talents:['Bold','Combat Pilot','Hard to Kill','Rapid Recovery','Remote Pilot','Spacesuit Training'],
+    assign:['Standby pilot','Flight control officer','Training pilot','Test pilot','Eagle maintenance','Moon buggy driver']},
+  {k:'technical', n:'Technical', sleeve:'Brown', sw:'brown',
+    desc:'Scientists chasing theory and technicians fixing everything from Eagles to broken kettles, and running the main Moonbase computer.',
+    spec:['science','technical'],
+    focuses:['Computer Operation','Data Analysis','Deductive Reasoning','Electronic Technology','Fabrication','Mechanical Repair'],
+    talents:['Broad Education','Cautious','Driven','Putting Theory into Practice','Research Laboratory','Rush Job'],
+    assign:['Nuclear power technician','Base maintenance','Medical equipment specialist','Eagle construction / maintenance','Computer technician','Computer operator','Civil engineer','Scientist (speciality)']},
+  {k:'security', n:'Security', sleeve:'Purple', sw:'purple',
+    desc:'The team that keeps several hundred people in line, guards sensitive areas, and is ready to defend Alpha if a hostile force gets in.',
+    spec:['security','command'],
+    focuses:['Interrogation','Intimidation','Observe','Pistols','Stealth','Tactics'],
+    talents:['Bold','Combat Ready','Danger Sense','Disarm','Hard to Kill','Passive Scrutiny'],
+    assign:['Guard','Heavy weapons specialist','Base patrol (police)','Weapons trainer','Weapons quartermaster','Laser battery operator']},
+  {k:'medical', n:'Medical', sleeve:'White', sw:'white',
+    desc:'The doctors, nurses and psychologists who take care of the base personnel.',
+    spec:['science','medical'],
+    focuses:['Biology','Chemistry','Composure','Emergency Medicine','Empathy','Psychiatry'],
+    talents:['Cautious','Combat Medic','Cool Under Pressure','Decisive Action','Inspire Trust','Team Player'],
+    assign:['Doctor','Surgeon','Nurse','Psychologist','Technical specialist']},
+  {k:'civilian', n:'Civilian / Visitor', sleeve:'None', sw:'none',
+    desc:'Those caught on Alpha when the Moon left orbit. Some joined Service; a few unique advisors, like Professor Bergman, became vital to the command staff.',
+    spec:['command','flight','medical','science','security','technical'],
+    specAny:true,
+    focuses:['Bureaucracy','Charm','Data Analysis','Diplomacy','Empathy','Precision'],
+    talents:['Advisor','Broad Education','Non-combatant','Passive Scrutiny','Peacemaker','Team Player'],
+    assign:['Expert advisor in their field','Multi-department consultant','Specialist with unique knowledge']}
+];
+var DEPT_M = {}; DEPTS.forEach(function(d){DEPT_M[d.k]=d;});
+
+// FOCUSES -- grouped; starred entries need a specifier
+var FOCUS_GROUPS = [
+  {g:'Command', items:['Acting','Animal Handling','Bartering','Base Operations','Charm','Deceit','Diplomacy','Etiquette','Gossip','Interrogation','Intimidation','Leadership','Persuasion','Teaching']},
+  {g:'Flight', items:['Acrobatics','Dance','Distance Running','Drive','Grace','Precision','Space Pilot*','Stealth','Swim']},
+  {g:'Medical', items:['Ecology','Emergency Medicine','Empathy','Genetics','Infectious Diseases','Poison','Psychiatry','Surgery','Veterinary Medicine','Virology']},
+  {g:'Science', items:['Anthropology','Biology','Botany','Bureaucracy','Chemistry','Data Analysis','Deductive Reasoning','Geology','Linguistics','Philosophy','Physics','Religion','Survival*']},
+  {g:'Security', items:['Blades','Blunt Weapons','Climb','Evasive Action','Heavy Weapons','Listening','Observe','Pistols','Sneak Attacks','Strategy','Tactics','Traps','Unarmed Combat']},
+  {g:'Technical', items:['Brewing and Winemaking','Computer Operation','Demolitions','Disguise','Electronic Technology','Espionage','Fabrication','Mechanical Repair','Nuclear Science','Restoration','Spacecraft Repair']},
+  {g:'General', items:['Art*','Composure','Music*','Resolve','Self-control']}
+];
+
+// TALENTS -- tag: null | 'skill' | 'attitude'
+var TALENTS = [
+  {n:'Advisor', tag:'skill', d:'When you assist an ally using the chosen skill, they may re-roll a single d20 in their pool.'},
+  {n:'Alpha Knowledge', tag:null, d:'You always have the asset ‘Map of Alpha’ in your head; use it whenever a map would help.'},
+  {n:'Berate', tag:null, d:'Once per scene, make a Challenging (D3) Command test against an opponent you can talk to; on success they lose 1 Spirit.'},
+  {n:'Bold', tag:'skill', d:'When you give the GM Threat to add a d20 for a test with the chosen skill, re-roll one die in your pool.'},
+  {n:'Broad Education', tag:'skill', d:'Once per session, using the chosen skill, make the test as if you had an applicable focus.'},
+  {n:'Cautious', tag:'skill', d:'Using the chosen skill, when you buy extra d20s with Momentum, re-roll one d20 in the pool.'},
+  {n:'Celebrity', tag:null, d:'You have some fame on Alpha; use Celebrity as a trait with those it impresses.'},
+  {n:'Combat Medic', tag:null, d:'Restore 1 Spirit to another character at the cost of 1 of your own; costs you both your action that round.'},
+  {n:'Combat Pilot', tag:null, d:'When an attack hits a craft you pilot, spend 2 Momentum to force a re-roll of the effect (accept the second result).'},
+  {n:'Combat Ready', tag:null, d:'Spend 1 Momentum or add 1 Threat to count as ready and armed for the first round of a fight, however surprised.'},
+  {n:'Computer Link', tag:null, d:'A brain-computer interface. Connecting (cables, an assistant, 3 actions) runs compatible systems at -1 Difficulty and as if focused.'},
+  {n:'Computer Priority', tag:null, d:'Reduce the Difficulty of any attempt to gain computer access by 2.'},
+  {n:'Cool Under Pressure', tag:'attitude', d:'Using the chosen Attitude, add Determination for only 2 Spirit instead of 3.'},
+  {n:'Cultural Chameleon', tag:null, d:'When speaking to intelligent aliens you have a positive trait for diplomacy -- unless they were already harmed by Alphans.'},
+  {n:'Danger Sense', tag:null, d:'Once per scene, ask the GM ‘Do I sense danger?’; they answer yes if you are watched, ambushed or a trap is near.'},
+  {n:'Decisive Action', tag:null, d:'As an action, nominate an opponent defeated without a test (they may spend 1 Spirit to avoid); you take a complication. Specify your method.'},
+  {n:'Disarm', tag:null, d:'As an action, spend 2 Momentum to disarm an opponent in close combat; it costs them an action to recover the weapon.'},
+  {n:'Dreams', tag:null, d:'After a full night’s sleep, describe a dream; if something later fits it, use the trait ‘Prophetic Dream’ for a bonus.'},
+  {n:'Driven', tag:'attitude', d:'After using Determination with the chosen Attitude, roll 1d20; if equal to or under that Attitude’s rating, regain 2 Spirit.'},
+  {n:'Everything to Hand', tag:null, d:'Once per session, assist an action without spending your own action.'},
+  {n:'Extensive Wardrobe', tag:null, d:'You have a large off-duty wardrobe; use it as an asset to impress others or trade favours.'},
+  {n:'Find Trouble', tag:null, d:'Once per adventure, ask the GM for one criminal contact or seedy location (a lead only, no association granted).'},
+  {n:'Hard to Kill', tag:null, d:'Once per session, when reduced to zero Spirit, instantly regain 1 Spirit instead of becoming exhausted.'},
+  {n:'Hidden Motives', tag:null, d:'When someone fails a social challenge against you, spend 1 Momentum to give them a false belief about you to exploit later.'},
+  {n:'Hiding Place', tag:null, d:'You know a cupboard-sized nook in Alpha; contraband stays undisturbed and base-wide searches for it are +1 Difficulty.'},
+  {n:'Improvised Weapon', tag:null, d:'Once per scene, as an action, create a weapon asset from things lying around.'},
+  {n:'Inspire', tag:null, d:'Once per session, make an inspiring speech to add 2 Momentum to the group pool.'},
+  {n:'Just do it now!', tag:null, d:'If you fail a test to make someone obey, add 1 Threat and re-roll the pool; you gain a negative social complication either way.'},
+  {n:'Masterful Innuendo', tag:null, d:'Spend 1 Momentum to pass one secret word to someone you know well (two words for 4 Momentum).'},
+  {n:'Married to the Space Programme', tag:null, d:'Use as a trait to recall or recognise old exploratory missions and secrets governments tried to hide.'},
+  {n:'My Way or the Highway', tag:null, d:'Re-roll one d20 when convincing others you have the best plan of action.'},
+  {n:'Nice Cup of Tea', tag:null, d:'Once per session, if you make tea for the group and they drink it, add 3 to the Momentum pool.'},
+  {n:'Non-combatant', tag:null, d:'Until you act aggressively you cannot be targeted in combat; if all your allies fall, you are defeated too unless you escaped.'},
+  {n:'Passive Scrutiny', tag:null, d:'When you enter a scene, ask one question of the GM as if you had spent Momentum to Obtain Information.'},
+  {n:'Peacemaker', tag:null, d:'If you refuse a fight and surrender, gain a new trait granting a bonus in diplomacy or negotiation with your captors.'},
+  {n:'Performer', tag:null, d:'On a successful test to perform to a group, add 2 successes (for Momentum).'},
+  {n:'Psychic', tag:null, d:'Add the trait ‘Psychic’; its meaning is up to the GM and may only ever matter when they choose.'},
+  {n:'Putting Theory into Practice', tag:null, d:'Once per scene, when you Obtain Information, create a free trait for an advantage or weakness you spotted.'},
+  {n:'Ransack', tag:null, d:'On a Security test to search an area, add 1 Threat to reduce Difficulty by 1 and halve the time taken.'},
+  {n:'Rapid Recovery', tag:null, d:'Once per scene, as an action, add 2 Threat to remove a complication representing a physical injury.'},
+  {n:'Remote Pilot', tag:null, d:'You do not suffer the usual +1 Difficulty when piloting an Eagle remotely.'},
+  {n:'Research Laboratory', tag:null, d:'You control a dedicated lab on Alpha and set its conditions; no need to share the space.'},
+  {n:'Rush Job', tag:'skill', d:'Change a failed die to one success on a test with the named skill, but suffer a complication (or reduce an extended test’s requirement by 2).'},
+  {n:'Spacesuit Training', tag:null, d:'You do not suffer the usual +1 Difficulty step for tasks while wearing a spacesuit.'},
+  {n:'Strong Will', tag:null, d:'Your maximum Spirit is permanently increased by 1.'},
+  {n:'Team Player', tag:null, d:'Once per session, after a successful test, add 1 to the Momentum pool (the pool still caps at 6).'},
+  {n:'Time Sense', tag:null, d:'You always know Alpha’s time and how much has passed, even after sleep or unconsciousness.'},
+  {n:'True Sight', tag:null, d:'When you suffer a complication the GM may make it ‘Seeing things’ -- it can pierce illusions but makes others doubt you.'},
+  {n:'Trustworthy', tag:null, d:'When trying to gain someone’s trust, reduce the Difficulty of that test by 1.'},
+  {n:'Well Prepared', tag:null, d:'Once per session, after the GM finishes adding Threat to a test, remove and discard 1 of that Threat.'}
+];
+var TALENT_M = {}; TALENTS.forEach(function(t){TALENT_M[t.n]=t;});
+
+var HOPES = [
+  {n:'Adventure', d:'You put yourself in danger, enjoying the surge of adrenaline.'},
+  {n:'Ambition', d:'You are dedicated to your career; any chance for promotion or respect matters.'},
+  {n:'Artist', d:'An artistic skill -- poetry, painting, writing, sculpture -- gives you hope.'},
+  {n:'Care', d:'You like to do things for others; being useful makes you feel needed.'},
+  {n:'Conflict', d:'You like to win; it doesn’t matter at what, as long as you beat someone.'},
+  {n:'Craftsman', d:'You like to mend or make useful things -- a gadgeteer, mechanic, or gardener.'},
+  {n:'Dedication', d:'You take satisfaction from a job done precisely and well, however minor.'},
+  {n:'Faith', d:'You practise a religion that gives you hope and peace, and may inspire others.'},
+  {n:'Fun', d:'You like to party and let your hair down -- better still with others along.'},
+  {n:'Pet', d:'Pets aren’t allowed on Alpha, so you visit the research animals to care for them.'},
+  {n:'Puzzler', d:'You like to figure things out; any mystery will do, big or small.'},
+  {n:'Romance', d:'You seek or maintain a relationship, finding solace with those you care about.'},
+  {n:'Understanding', d:'You are dedicated to learning something new, to add to human knowledge.'}
+];
+
+var TRAITS_PERSONALITY = ['Adaptable','Adventurous','Agreeable','Arrogant','Attractive','Bull-headed','Calm','Caring','Cantankerous','Charming','Conscientious','Creative','Curious','Dedicated','Discrete','Dutiful','Empathic','Energetic','Extroverted','Focused','Gregarious','Grumpy','Honest','Intimidating','Introverted','Kind','Lazy','Leader','Loyal','Mindful','Observant','Organised','Party Animal','Passionate','Passive-aggressive','Perfectionist','Persistent','Polite','Precise','Quiet','Reckless','Selfish','Serious','Studious','Stylish','Tense','Thoughtful','Tough','Uncertain','Unobtrusive','Understanding','Well-read','Well-mannered','Weird','Xenophobic','Youthful'];
+var TRAITS_PROFESSIONAL = ['Advisor','Assistant','Biologist','Botanist','Chemist','Consultant','Doctor','Electrician','Geologist','Guard','Investigator','Mechanic','Nurse','Operator','Physicist','Pilot','Psychiatrist','Quartermaster','Researcher','Secretary','Soldier','Tea maker','Technician'];
+
+var SIG_ITEMS = ['A photograph','A piece of art','A book','A weapon','Craft supplies','An emblem','A tool'];
+
+var NAMES_F = ['Alan','Anton','Anya','Bram','Catherine','Dai','Elena','Fenella','Gustav','Helena','Ingrid','Jaana','Kano','Lars','Maya','Nadia','Omar','Petra','Quon','Raul','Sandra','Tanya','Umi','Victor','Wei','Yasko','Zia','John','Sondra','Paul','Regina','David','Tony','Alibe','Bob','Michelle'];
+var NAMES_L = ['Koenig','Russell','Bergman','Carter','Morrow','Kano','Verdeschi','Maya','Fraser','Osgood','Reilly','Petrov','Sanchez','Nakamura','Okoye','Lindstrom','Dubois','Haan','Volkov','Bennett','Cho','Mateo','Abrams','Sundstrom','Quist','Delgado','Ferro','Yates'];
+
+// ============================================================
+// STATE
+// ============================================================
+var STEPS = ['Concept','Skills & Attitudes','Focuses & Talents','Finishing','Dossier'];
+var S = {
+  step:0, dept:null,
+  sk6:null, sk5:null, bonus:{},          // skills
+  att:{},                                 // attitudes added-points {k:0..4}
+  focuses:[],                             // [{name, spec, dept:bool}]
+  talents:[],                             // [{name, bind}]
+  hope:null, hopeCustom:'',
+  traitPro:'', traitPer:'',
+  signature:'', assignment:'', name:''
+};
+function resetAlloc(){
+  S.bonus={}; SKILLS.forEach(function(s){S.bonus[s.k]=0;});
+  S.att={}; ATTITUDES.forEach(function(a){S.att[a.k]=0;});
+}
+resetAlloc();
+
+// ---- skill helpers ----
+function skTotal(k){ return 4 + (S.sk6===k?2:0) + (S.sk5===k?1:0) + (S.bonus[k]||0); }
+function bonusSpent(){ var t=0; for(var k in S.bonus) t+=S.bonus[k]; return t; }
+function skillsValid(){
+  if(!S.sk6||!S.sk5||S.sk6===S.sk5) return false;
+  var d=DEPT_M[S.dept]; var specOK = d.specAny || d.spec.indexOf(S.sk6)>=0 || d.spec.indexOf(S.sk5)>=0;
+  if(!specOK) return false;
+  if(bonusSpent()!==3) return false;
+  for(var i=0;i<SKILLS.length;i++){ if(skTotal(SKILLS[i].k)>8) return false; }
+  return true;
+}
+// ---- attitude helpers ----
+function attTotal(k){ return 4 + (S.att[k]||0); }
+function attSpent(){ var t=0; for(var k in S.att) t+=S.att[k]; return t; }
+function attValid(){ if(attSpent()!==10) return false; for(var k in S.att){ if(attTotal(k)>8) return false; } return true; }
+function highAtt(){ var c=0; ATTITUDES.forEach(function(a){ if(attTotal(a.k)>=7) c++; }); return c; }
+function spirit(){ var base=4+highAtt(); if(hasTalent('Strong Will')) base+=1; return base; }
+function hasTalent(n){ return S.talents.some(function(t){return t.name===n;}); }
+
+// ---- focus helpers ----
+function deptFocusSet(){ return DEPT_M[S.dept].focuses.slice(); }
+function focusHasDept(){ var set=deptFocusSet(); return S.focuses.some(function(f){ return set.indexOf(f.name.replace(/\*$/,''))>=0; }); }
+function focusValid(){ return S.focuses.length===4 && focusHasDept() && S.focuses.every(function(f){ return !f.star || (f.spec&&f.spec.trim()); }); }
+
+// ---- talent helpers ----
+function talentValid(){ return S.talents.length===3 && S.talents.every(function(t){ var td=TALENT_M[t.name]; return !td.tag || (t.bind&&t.bind.trim()); }); }
+
+// ---- finishing ----
+function finishValid(){ return !!(S.name.trim() && (S.hope||S.hopeCustom.trim()) && S.traitPro.trim() && S.traitPer.trim()); }
+
+function stepValid(i){
+  if(i===0) return !!S.dept;
+  if(i===1) return skillsValid() && attValid();
+  if(i===2) return focusValid() && talentValid();
+  if(i===3) return finishValid();
+  return true;
+}
+function maxReachable(){ var m=0; for(var i=0;i<STEPS.length-1;i++){ if(stepValid(i)) m=i+1; else break; } return m; }
+
+// ============================================================
+// RENDER
+// ============================================================
+var main=document.getElementById('main'), track=document.getElementById('track');
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderTrack(){
+  var mr=maxReachable();
+  track.innerHTML=STEPS.map(function(nm,i){
+    var cls='step-item';
+    if(i===S.step) cls+=' active';
+    else if(stepValid(i)) cls+=' done';
+    var clickable = i<=mr;
+    if(clickable && i!==S.step) cls+=' clickable';
+    var oc = clickable?(' onclick="goStep('+i+')"'):'';
+    return '<div class="'+cls+'"'+oc+'><span class="step-num">'+(i+1)+'</span>'+nm+'</div>';
+  }).join('');
+}
+function goStep(i){ if(i>maxReachable()) return; S.step=i; render(); window.scrollTo(0,0); }
+function next(){ if(stepValid(S.step)&&S.step<STEPS.length-1){ S.step++; render(); window.scrollTo(0,0);} }
+function prev(){ if(S.step>0){ S.step--; render(); window.scrollTo(0,0);} }
+
+function nav(){
+  var last=S.step===STEPS.length-1;
+  var canNext=stepValid(S.step);
+  var back = S.step>0 ? '<button class="btn-s" onclick="prev()">&larr; Back</button>' : '<span></span>';
+  var fwd = last
+    ? '<button class="btn-s" onclick="window.print()">Print Dossier</button>'
+    : '<button class="btn-p" onclick="next()"'+(canNext?'':' disabled')+'>Continue &rarr;</button>';
+  return '<div class="nav-row">'+back+fwd+'</div>';
+}
+function tally(txt,ok,bad){ var c='tally'+(ok?' ok':bad?' bad':''); return '<span class="'+c+'">'+txt+'</span>'; }
+
+function render(){
+  renderTrack();
+  if(S.step===0) renderConcept();
+  else if(S.step===1) renderSkillsAtt();
+  else if(S.step===2) renderFocusTalent();
+  else if(S.step===3) renderFinishing();
+  else renderDossier();
+}
+
+// ---- STEP 0: CONCEPT ----
+function renderConcept(){
+  var h='<div class="step-intro"><div class="step-h">Step One &middot; Concept</div>'+
+    '<div class="step-p">Everyone on Moonbase Alpha has a job. Choose the <b>department</b> that shapes your character’s skills, focuses and talents. It guides creation; it never restricts it.</div></div>';
+  h+='<div class="dept-grid">';
+  DEPTS.forEach(function(d){
+    var sel=S.dept===d.k;
+    var specTxt = d.specAny?'Any two Skills':d.spec.map(function(k){return SKILL_N[k];}).join(', ');
+    h+='<div class="dept-card'+(sel?' selected':'')+'" onclick="pickDept(\''+d.k+'\')">'+
+       (sel?'<div class="sel-badge">&#10003;</div>':'')+
+       '<div class="dept-sleeve" style="background:'+SL[d.sw]+'"></div>'+
+       '<div class="dept-body">'+
+       '<div class="dept-name">'+esc(d.n)+'</div>'+
+       '<div class="dept-sleeve-lbl">Sleeve: <span>'+esc(d.sleeve)+'</span></div>'+
+       '<div class="dept-desc">'+esc(d.desc)+'</div>'+
+       '<div class="dept-spec"><b>Specialty:</b> '+esc(specTxt)+'</div>'+
+       '<div class="dept-sug"><b>Talents:</b> '+esc(d.talents.join(', '))+'</div>'+
+       '</div></div>';
+  });
+  h+='</div>'+nav();
+  main.innerHTML=h;
+}
+function pickDept(k){
+  if(S.dept!==k){ S.dept=k; S.sk6=null; S.sk5=null; }
+  render();
+}
+
+// ---- STEP 1: SKILLS & ATTITUDES ----
+function renderSkillsAtt(){
+  var d=DEPT_M[S.dept];
+  var h='<div class="step-intro"><div class="step-h">Step Two &middot; Skills &amp; Attitudes</div>'+
+    '<div class="step-p">Set your Skills, then spend your Attitude points. Skills describe training; Attitudes describe the situations you thrive in. Both feed your target numbers at the table.</div></div>';
+
+  // SKILLS panel
+  h+='<div class="panel"><div class="panel-hdr"><span class="ph-name">Skills</span>'+
+     '<button class="roll-btn" onclick="randSkills()">&#9862; Roll</button></div>';
+  h+='<div class="rule-line">Set one Skill to <b>6</b> and a different one to <b>5</b> (at least one must be a department specialty), then spend <b>3</b> bonus points -- max <b>+2</b> to any Skill, cap 8.</div>';
+  SKILLS.forEach(function(s){
+    var isSpec = !d.specAny && d.spec.indexOf(s.k)>=0;
+    var tot=skTotal(s.k);
+    var boosted = tot>4;
+    h+='<div class="alloc-row">'+
+       '<div class="al-name">'+esc(s.n)+'<span class="al-sub">('+esc(s.sub)+')</span>'+(isSpec?'<span class="al-spec">Spec</span>':'')+'</div>';
+    // 6 / 5 toggles
+    h+='<div class="pick6"><button class="tag-btn'+(S.sk6===s.k?' on':'')+'" onclick="setSk6(\''+s.k+'\')">6</button>'+
+       '<button class="tag-btn'+(S.sk5===s.k?' on':'')+'" onclick="setSk5(\''+s.k+'\')">5</button></div>';
+    // bonus stepper
+    var b=S.bonus[s.k]||0;
+    var canUp = b<2 && bonusSpent()<3 && tot<8;
+    h+='<div class="stepper"><button class="sb" onclick="bonusDelta(\''+s.k+'\',-1)"'+(b<=0?' disabled':'')+'>&minus;</button>'+
+       '<button class="sb" onclick="bonusDelta(\''+s.k+'\',1)"'+(canUp?'':' disabled')+'>+</button></div>';
+    h+='<div class="al-total'+(boosted?'':' base')+'">'+tot+'</div>';
+    h+='</div>';
+  });
+  var bs=bonusSpent();
+  var skOK=skillsValid();
+  h+='<div class="rule-line">'+tally('6 &amp; 5 assigned: '+((S.sk6&&S.sk5&&S.sk6!==S.sk5)?'yes':'no'), (S.sk6&&S.sk5&&S.sk6!==S.sk5))+' '+
+     tally('Specialty: '+(skSpecOK()?'met':'needed'), skSpecOK())+' '+
+     tally('Bonus '+bs+'/3', bs===3, bs>3)+'</div>';
+  h+='</div>';
+
+  // ATTITUDES panel
+  var as=attSpent();
+  h+='<div class="pool-bar"><span class="pool-label">Attitude Points</span>'+
+     '<div class="pool-dice">'+poolDice(10,as)+'</div>'+
+     '<span class="pool-rem'+(as===10?' done':'')+'">'+(10-as)+' <small>left</small></span></div>';
+  h+='<div class="panel"><div class="panel-hdr"><span class="ph-name">Attitudes</span>'+
+     '<span class="ph-note">Each starts at 4 &middot; add 10 &middot; cap 8</span>'+
+     '<button class="roll-btn" style="margin-left:12px" onclick="randAtt()">&#9862; Roll</button></div>';
+  ATTITUDES.forEach(function(a){
+    var tot=attTotal(a.k), add=S.att[a.k]||0;
+    var canUp = tot<8 && attSpent()<10;
+    h+='<div class="alloc-row">'+
+       '<div class="al-name">'+esc(a.n)+'<span class="al-sub">'+esc(a.d)+'</span></div>'+
+       '<div class="stepper"><button class="sb" onclick="attDelta(\''+a.k+'\',-1)"'+(add<=0?' disabled':'')+'>&minus;</button>'+
+       '<button class="sb" onclick="attDelta(\''+a.k+'\',1)"'+(canUp?'':' disabled')+'>+</button></div>'+
+       '<div class="al-total'+(tot>4?'':' base')+'">'+tot+(tot>=7?' ★':'')+'</div>'+
+       '</div>';
+  });
+  h+='<div class="rule-line">Spirit preview: <b>'+spirit()+'</b> (4 + 1 per Attitude of 7+, currently '+highAtt()+')</div>';
+  h+='</div>';
+
+  h+=nav();
+  main.innerHTML=h;
+}
+function skSpecOK(){ var d=DEPT_M[S.dept]; return d.specAny || (S.sk6&&d.spec.indexOf(S.sk6)>=0) || (S.sk5&&d.spec.indexOf(S.sk5)>=0); }
+function poolDice(total,used){ var s=''; for(var i=0;i<total;i++){ s+='<div class="die-pip'+(i<used?'':' used')+'">'+(i<used?'●':'')+'</div>'; } return s; }
+function setSk6(k){ if(S.sk6===k){S.sk6=null;} else { S.sk6=k; if(S.sk5===k)S.sk5=null; } trimBonus(); render(); }
+function setSk5(k){ if(S.sk5===k){S.sk5=null;} else { S.sk5=k; if(S.sk6===k)S.sk6=null; } trimBonus(); render(); }
+function trimBonus(){ SKILLS.forEach(function(s){ if(skTotal(s.k)>8){ S.bonus[s.k]=Math.max(0,8-(4+(S.sk6===s.k?2:0)+(S.sk5===s.k?1:0))); } }); }
+function bonusDelta(k,dl){ var nv=(S.bonus[k]||0)+dl; if(nv<0||nv>2) return; if(dl>0){ if(bonusSpent()>=3) return; if(skTotal(k)>=8) return; } S.bonus[k]=nv; render(); }
+function attDelta(k,dl){ var nv=(S.att[k]||0)+dl; if(nv<0) return; if(dl>0){ if(attSpent()>=10) return; if(attTotal(k)>=8) return; } S.att[k]=nv; render(); }
+
+// ---- STEP 2: FOCUSES & TALENTS ----
+function renderFocusTalent(){
+  var d=DEPT_M[S.dept];
+  var deptSet=deptFocusSet();
+  var h='<div class="step-intro"><div class="step-h">Step Three &middot; Focuses &amp; Talents</div>'+
+    '<div class="step-p">Pick <b>4 focuses</b> (at least one from your department, shown with a <span style="color:var(--eagle)">&#9670;</span>) and <b>3 talents</b>. Focuses turn any roll of your Skill or lower into a critical success when they apply.</div></div>';
+
+  // FOCUS count bar
+  var fc=S.focuses.length;
+  h+='<div class="pool-bar"><span class="pool-label">Focuses</span>'+
+     tally(fc+' / 4 chosen', fc===4)+' '+
+     tally('Department focus: '+(focusHasDept()?'included':'needed'), focusHasDept())+
+     '<button class="roll-btn" style="margin-left:auto" onclick="randFocus()">&#9862; Roll 4</button></div>';
+
+  h+='<div class="cols">';
+  FOCUS_GROUPS.forEach(function(grp){
+    h+='<div><div class="pick-group"><div class="pg-title">'+esc(grp.g)+'</div>';
+    grp.items.forEach(function(item){
+      var star = /\*$/.test(item);
+      var base = item.replace(/\*$/,'');
+      var isDept = deptSet.indexOf(base)>=0;
+      var chosen = S.focuses.find(function(f){return f.name===item;});
+      var on=!!chosen;
+      var disabled = !on && fc>=4;
+      h+='<div class="pick'+(on?' on':'')+(disabled?' disabled':'')+'" onclick="toggleFocus(\''+esc(item).replace(/'/g,"\\'")+'\')">'+
+         '<div class="pk-box">'+(on?'✓':'')+'</div>'+
+         '<div class="pk-main"><div class="pk-name">'+esc(base)+(star?' *':'')+(isDept?'<span class="dept-star">&#9670; dept</span>':'')+'</div>';
+      if(on&&star){
+        h+='<input class="spec-inp" placeholder="Specify (e.g. Eagle, Arctic, painting)" value="'+esc(chosen.spec||'')+'" onclick="event.stopPropagation()" oninput="focusSpec(\''+esc(item).replace(/'/g,"\\'")+'\',this.value)">';
+      }
+      h+='</div></div>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+
+  // TALENTS
+  var tc=S.talents.length;
+  h+='<div class="pool-bar" style="margin-top:18px"><span class="pool-label">Talents</span>'+
+     tally(tc+' / 3 chosen', talentValid())+
+     '<span class="ph-note" style="margin-left:12px;color:var(--dust);font-size:12px">Suggested for '+esc(d.n)+': '+esc(d.talents.join(', '))+'</span>'+
+     '<button class="roll-btn" style="margin-left:auto" onclick="randTalent()">&#9862; Roll 3</button></div>';
+  h+='<div class="cols">';
+  var half=Math.ceil(TALENTS.length/2);
+  [TALENTS.slice(0,half),TALENTS.slice(half)].forEach(function(col){
+    h+='<div>';
+    col.forEach(function(t){
+      var chosen=S.talents.find(function(x){return x.name===t.n;});
+      var on=!!chosen;
+      var disabled=!on && tc>=3;
+      var sugg = d.talents.indexOf(t.n)>=0;
+      h+='<div class="pick'+(on?' on':'')+(disabled?' disabled':'')+'" onclick="toggleTalent(\''+esc(t.n).replace(/'/g,"\\'")+'\')">'+
+         '<div class="pk-box">'+(on?'✓':'')+'</div>'+
+         '<div class="pk-main"><div class="pk-name">'+esc(t.n)+(t.tag?'<span class="pk-tag">('+t.tag+')</span>':'')+(sugg?'<span class="dept-star">&#9670;</span>':'')+'</div>'+
+         '<div class="pk-desc">'+t.d+'</div>';
+      if(on&&t.tag){
+        var opts = t.tag==='skill'?SKILLS.map(function(s){return [s.k,s.n];}):ATTITUDES.map(function(a){return [a.k,a.n];});
+        h+='<div class="pk-bind"><select class="bind-sel" onclick="event.stopPropagation()" onchange="talentBind(\''+esc(t.n).replace(/'/g,"\\'")+'\',this.value)">'+
+           '<option value="">-- choose '+t.tag+' --</option>'+
+           opts.map(function(o){return '<option value="'+o[1]+'"'+(chosen.bind===o[1]?' selected':'')+'>'+o[1]+'</option>';}).join('')+
+           '</select></div>';
+      }
+      h+='</div></div>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  h+=nav();
+  main.innerHTML=h;
+}
+function toggleFocus(name){
+  var i=S.focuses.findIndex(function(f){return f.name===name;});
+  if(i>=0){ S.focuses.splice(i,1); }
+  else { if(S.focuses.length>=4) return; S.focuses.push({name:name, star:/\*$/.test(name), spec:''}); }
+  render();
+}
+function focusSpec(name,v){ var f=S.focuses.find(function(x){return x.name===name;}); if(f){ f.spec=v; } }
+function toggleTalent(name){
+  var i=S.talents.findIndex(function(t){return t.name===name;});
+  if(i>=0){ S.talents.splice(i,1); }
+  else { if(S.talents.length>=3) return; S.talents.push({name:name, bind:''}); }
+  render();
+}
+function talentBind(name,v){ var t=S.talents.find(function(x){return x.name===name;}); if(t){ t.bind=v; render(); } }
+
+// ---- STEP 3: FINISHING ----
+function renderFinishing(){
+  var d=DEPT_M[S.dept];
+  var h='<div class="step-intro"><div class="step-h">Step Four &middot; Finishing Touches</div>'+
+    '<div class="step-p">Confirm your Spirit, choose a Hope, two Traits, a Signature Item, an assignment on Alpha, and a name.</div></div>';
+  h+='<div class="fin-grid">';
+
+  // Spirit
+  h+='<div class="fblock"><div class="fb-title">Spirit</div>'+
+     '<div class="spirit-big"><span class="spirit-num">'+spirit()+'</span></div>'+
+     '<div class="spirit-calc">Base 4, +1 per Attitude of 7+ (you have '+highAtt()+')'+(hasTalent('Strong Will')?', +1 from Strong Will':'')+'.</div>'+
+     '<div class="hint">Spend 3 Spirit for Determination (re-roll any dice; one auto-critical if spent first). Refreshes fully at the start of each adventure.</div></div>';
+
+  // Hope
+  var hopeSel = S.hope||'';
+  h+='<div class="fblock"><div class="fb-title">Hope<button class="roll-btn" onclick="randHope()">&#9862;</button></div>'+
+     '<select class="sel" onchange="setHope(this.value)">'+
+     '<option value="">-- choose a Hope --</option>'+
+     HOPES.map(function(hp){return '<option value="'+hp.n+'"'+(hopeSel===hp.n?' selected':'')+'>'+hp.n+'</option>';}).join('')+
+     '<option value="__custom"'+(S.hopeCustom?' selected':'')+'>Custom...</option>'+
+     '</select>';
+  if(S.hope){ var hp=HOPES.find(function(x){return x.n===S.hope;}); h+='<div class="picked-desc">'+esc(hp.d)+'</div>'; }
+  if(!S.hope){ h+='<input class="txt" style="margin-top:8px" placeholder="Your own Hope" value="'+esc(S.hopeCustom)+'" oninput="S.hopeCustom=this.value;refreshNav()">'; }
+  h+='<div class="hint">A hope scene played out in an adventure can replenish 2 Spirit. Hope also works as a trait when it fits.</div></div>';
+
+  // Traits
+  h+='<div class="fblock"><div class="fb-title">Traits<button class="roll-btn" onclick="randTraits()">&#9862;</button></div>'+
+     '<label class="lbl">Professional / role trait</label>'+
+     '<input class="txt" list="dl-pro" placeholder="e.g. Investigator" value="'+esc(S.traitPro)+'" oninput="S.traitPro=this.value;refreshNav()">'+
+     '<datalist id="dl-pro">'+TRAITS_PROFESSIONAL.map(function(t){return '<option value="'+t+'">';}).join('')+'</datalist>'+
+     '<label class="lbl">Personality trait</label>'+
+     '<input class="txt" list="dl-per" placeholder="e.g. Intimidating" value="'+esc(S.traitPer)+'" oninput="S.traitPer=this.value;refreshNav()">'+
+     '<datalist id="dl-per">'+TRAITS_PERSONALITY.map(function(t){return '<option value="'+t+'">';}).join('')+'</datalist>'+
+     '<div class="hint">Your Hope counts as a third trait. Keep the two distinct so one is likely to apply.</div></div>';
+
+  // Signature item
+  h+='<div class="fblock"><div class="fb-title">Signature Item</div>'+
+     '<input class="txt" placeholder="Describe one personal object" value="'+esc(S.signature)+'" oninput="S.signature=this.value">'+
+     '<div class="chip-row">'+SIG_ITEMS.map(function(s){return '<span class="chip" onclick="setSig(\''+s.replace(/'/g,"\\'")+'\')">'+esc(s)+'</span>';}).join('')+'</div>'+
+     '<div class="hint">Once per session, interact with it to gain 1 Momentum, or spend 1 Momentum to regain 1 Spirit.</div></div>';
+
+  // Assignment
+  h+='<div class="fblock"><div class="fb-title">Assignment on Alpha</div>'+
+     '<input class="txt" list="dl-assign" placeholder="Your job on the base" value="'+esc(S.assignment)+'" oninput="S.assignment=this.value">'+
+     '<datalist id="dl-assign">'+d.assign.map(function(a){return '<option value="'+esc(a)+'">';}).join('')+'</datalist>'+
+     '<div class="chip-row">'+d.assign.slice(0,6).map(function(a){return '<span class="chip" onclick="setAssign(\''+a.replace(/'/g,"\\'")+'\')">'+esc(a)+'</span>';}).join('')+'</div></div>';
+
+  // Name
+  h+='<div class="fblock wide"><div class="fb-title">Name<button class="roll-btn" onclick="randName()">&#9862;</button></div>'+
+     '<input class="name-inp" placeholder="Character name" value="'+esc(S.name)+'" oninput="S.name=this.value;refreshNav()">'+
+     '<div class="hint">Alpha is diverse -- any name and background is welcome.</div></div>';
+
+  h+='</div>'+nav();
+  main.innerHTML=h;
+}
+function setHope(v){ if(v==='__custom'){ S.hope=null; } else if(v===''){ S.hope=null; } else { S.hope=v; S.hopeCustom=''; } render(); }
+function setSig(v){ S.signature=v; render(); }
+function setAssign(v){ S.assignment=v; render(); }
+function refreshNav(){
+  // light refresh: update nav button + track without full rerender (keeps input focus)
+  var navEl=document.querySelector('.nav-row');
+  if(navEl){ navEl.outerHTML=nav(); }
+  renderTrack();
+}
+
+// ---- STEP 4: DOSSIER ----
+function renderDossier(){
+  var d=DEPT_M[S.dept];
+  var h='<div class="dossier">';
+  h+='<div class="dos-sleeve" style="background:'+SL[d.sw]+'"></div>';
+  h+='<div class="dos-hdr"><div><div class="dos-name">'+esc(S.name||'Unnamed Alphan')+'</div>'+
+     '<div class="dos-role">'+esc(d.n)+(S.assignment?' &middot; '+esc(S.assignment):'')+'</div></div>'+
+     '<div class="dos-badge">Sleeve: '+esc(d.sleeve)+'</div></div>';
+
+  // Skills
+  h+='<div class="dos-sec"><div class="dos-sec-title">Skills</div><div class="stat-grid">';
+  SKILLS.forEach(function(s){ var t=skTotal(s.k); h+='<div class="stat'+(t>=6?' hi':'')+'"><span class="s-l">'+esc(s.n)+'</span><span class="s-v">'+t+'</span></div>'; });
+  h+='</div></div>';
+  // Attitudes
+  h+='<div class="dos-sec"><div class="dos-sec-title">Attitudes</div><div class="stat-grid">';
+  ATTITUDES.forEach(function(a){ var t=attTotal(a.k); h+='<div class="stat'+(t>=7?' hi':'')+'"><span class="s-l">'+esc(a.n)+'</span><span class="s-v">'+t+'</span></div>'; });
+  h+='</div></div>';
+
+  // Spirit + Hope
+  var pips=''; for(var i=0;i<spirit();i++) pips+='<span class="sp-pip"></span>';
+  var hopeTxt = S.hope || S.hopeCustom;
+  h+='<div class="dos-sec"><div class="dos-sec-title">Spirit &amp; Hope</div>'+
+     '<div class="dos-kv"><div><b>Spirit</b> '+spirit()+' &nbsp;<span class="spirit-pips">'+pips+'</span></div>'+
+     '<div><b>Hope</b> '+esc(hopeTxt||'--')+'</div></div></div>';
+
+  // Focuses
+  h+='<div class="dos-sec"><div class="dos-sec-title">Focuses</div><ul class="dos-list">';
+  S.focuses.forEach(function(f){ var nm=f.name.replace(/\*$/,''); if(f.star&&f.spec) nm+=' ('+f.spec+')'; var dept=deptFocusSet().indexOf(f.name.replace(/\*$/,''))>=0; h+='<li><b>'+esc(nm)+'</b>'+(dept?' &#9670;':'')+'</li>'; });
+  h+='</ul></div>';
+
+  // Talents
+  h+='<div class="dos-sec"><div class="dos-sec-title">Talents</div><ul class="dos-list">';
+  S.talents.forEach(function(t){ var td=TALENT_M[t.name]; var nm=(td.n||t.name)+(t.bind?' ('+t.bind+')':''); h+='<li><b>'+esc(nm)+'</b><span class="dl-desc">'+td.d+'</span></li>'; });
+  h+='</ul></div>';
+
+  // Traits + signature
+  h+='<div class="dos-sec"><div class="dos-sec-title">Traits &amp; Signature Item</div>'+
+     '<div class="dos-kv"><div><b>Professional</b> '+esc(S.traitPro||'--')+'</div>'+
+     '<div><b>Personality</b> '+esc(S.traitPer||'--')+'</div>'+
+     '<div><b>Hope (as trait)</b> '+esc(hopeTxt||'--')+'</div></div>'+
+     (S.signature?'<div style="margin-top:10px"><b style="color:var(--steel);font-family:var(--ff-m);font-size:12px;letter-spacing:.08em;text-transform:uppercase">Signature Item</b><div class="dos-narr" style="font-style:normal;color:var(--moon);margin-top:3px">'+esc(S.signature)+'</div></div>':'')+
+     '</div>';
+
+  h+='</div>';
+  h+='<div class="nav-row"><button class="btn-s" onclick="prev()">&larr; Back</button>'+
+     '<div style="display:flex;gap:10px"><button class="btn-s danger" onclick="startOver()">Start Over</button>'+
+     '<button class="btn-p" onclick="window.print()">Print Dossier</button></div></div>';
+  main.innerHTML=h;
+}
+function startOver(){ S={step:0,dept:null,sk6:null,sk5:null,bonus:{},att:{},focuses:[],talents:[],hope:null,hopeCustom:'',traitPro:'',traitPer:'',signature:'',assignment:'',name:''}; resetAlloc(); render(); window.scrollTo(0,0); }
+
+// ============================================================
+// RANDOMISERS
+// ============================================================
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+
+function randSkills(){
+  var d=DEPT_M[S.dept]; var keys=SKILLS.map(function(s){return s.k;});
+  // ensure specialty on the 6 or 5
+  if(d.specAny){ var sh=shuffle(keys); S.sk6=sh[0]; S.sk5=sh[1]; }
+  else { var spec=pick(d.spec); S.sk6=spec; var rest=shuffle(keys.filter(function(k){return k!==spec;})); S.sk5=rest[0]; }
+  // 3 bonus, max 2 each, cap 8
+  S.bonus={}; keys.forEach(function(k){S.bonus[k]=0;});
+  var left=3;
+  while(left>0){ var k=pick(keys); if(S.bonus[k]<2 && skTotal(k)<8){ S.bonus[k]++; left--; } }
+  render();
+}
+function randAtt(){
+  var keys=ATTITUDES.map(function(a){return a.k;});
+  S.att={}; keys.forEach(function(k){S.att[k]=0;});
+  var left=10;
+  while(left>0){ var k=pick(keys); if(S.att[k]<4){ S.att[k]++; left--; } }
+  render();
+}
+function randFocus(){
+  var d=DEPT_M[S.dept];
+  var deptSet=deptFocusSet();
+  // build master list of pickable focus display-names
+  var all=[]; FOCUS_GROUPS.forEach(function(g){ g.items.forEach(function(it){ all.push(it); }); });
+  // 1 from dept
+  var deptItems = all.filter(function(it){ return deptSet.indexOf(it.replace(/\*$/,''))>=0; });
+  var chosen=[]; var first=pick(deptItems); chosen.push(first);
+  var pool=shuffle(all.filter(function(it){return it!==first;}));
+  for(var i=0;chosen.length<4 && i<pool.length;i++){ chosen.push(pool[i]); }
+  S.focuses=chosen.map(function(name){ var f={name:name,star:/\*$/.test(name),spec:''}; if(f.star){ f.spec=randSpec(name); } return f; });
+  render();
+}
+function randSpec(name){ if(/Space Pilot/.test(name)) return pick(['Eagle','Swift','Hawk']); if(/Survival/.test(name)) return pick(['Desert','Jungle','Arctic','Urban']); if(/Art/.test(name)) return pick(['painting','sculpture','poetry']); if(/Music/.test(name)) return pick(['piano','guitar','drums']); return ''; }
+function randTalent(){
+  var d=DEPT_M[S.dept];
+  // bias toward suggested, fill random
+  var suggested = d.talents.filter(function(n){return TALENT_M[n];});
+  var picks = shuffle(suggested).slice(0,Math.min(2,suggested.length));
+  var pool = shuffle(TALENTS.map(function(t){return t.n;}).filter(function(n){return picks.indexOf(n)<0;}));
+  for(var i=0;picks.length<3 && i<pool.length;i++){ picks.push(pool[i]); }
+  S.talents=picks.slice(0,3).map(function(n){ var t={name:n,bind:''}; var td=TALENT_M[n]; if(td.tag==='skill') t.bind=pick(SKILLS).n; else if(td.tag==='attitude') t.bind=pick(ATTITUDES).n; return t; });
+  render();
+}
+function randHope(){ S.hope=pick(HOPES).n; S.hopeCustom=''; render(); }
+function randTraits(){ S.traitPro=pick(TRAITS_PROFESSIONAL); S.traitPer=pick(TRAITS_PERSONALITY); render(); }
+function randName(){ S.name=pick(NAMES_F)+' '+pick(NAMES_L); refreshNav(); var el=document.querySelector('.name-inp'); if(el) el.value=S.name; }
+function randAll(silent){
+  S.dept=pick(DEPTS).k; S.sk6=null; S.sk5=null;
+  randSkills(); randAtt(); randFocus(); randTalent();
+  S.hope=pick(HOPES).n; S.hopeCustom='';
+  S.traitPro=pick(TRAITS_PROFESSIONAL); S.traitPer=pick(TRAITS_PERSONALITY);
+  S.signature=pick(['A photograph of family left on Earth','A worn paperback novel','A commendation medal','A favourite multi-tool','A hand-carved chess piece','A pressed flower from Earth']);
+  S.assignment=pick(DEPT_M[S.dept].assign);
+  S.name=pick(NAMES_F)+' '+pick(NAMES_L);
+}
+function randomiseAll(){ randAll(); S.step=STEPS.length-1; render(); window.scrollTo(0,0); }
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+</script>
+<script>
+/* Visit beacon -> log-visit edge function (mirrors lib/events.ts logVisit).
+   This is a static page, so the site-wide VisitLogger never fires here; this
+   sends a page='/space1999' visit. ip_address is captured server-side (from
+   the request), geo comes from the geo_* cookies set by middleware, and
+   ip_hash = SHA-256(geo_ip) to match hashIP so it dedups with the rest of the
+   system. Respects the owner opt-out (localStorage tapestry_no_log = '1'). */
+(function () {
+  try {
+    if (localStorage.getItem('tapestry_no_log') === '1') return;
+    var ck = function (n) { var m = document.cookie.match('(^|; )' + n + '=([^;]*)'); return m ? decodeURIComponent(m[2]) : null; };
+    var sid = localStorage.getItem('tapestry_session_id');
+    if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); localStorage.setItem('tapestry_session_id', sid); }
+    var lat = ck('geo_lat'), lng = ck('geo_lng');
+    var send = function (ipHash) {
+      fetch('https://jbudzglgtxeoaufpejrv.supabase.co/functions/v1/log-visit', {
+        method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: String(sid).slice(0, 64),
+          page: '/space1999',
+          referrer: document.referrer || null,
+          country_code: ck('geo_country'),
+          region: ck('geo_region'),
+          city: ck('geo_city'),
+          latitude: lat ? parseFloat(lat) : null,
+          longitude: lng ? parseFloat(lng) : null,
+          ip_hash: ipHash
+        })
+      }).catch(function () {});
+    };
+    var rawIP = ck('geo_ip');
+    if (rawIP && crypto.subtle) {
+      crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawIP)).then(function (buf) {
+        send(Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join(''));
+      }).catch(function () { send(null); });
+    } else { send(null); }
+  } catch (e) {}
+})();
+</script>
