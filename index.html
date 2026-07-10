@@ -1,17 +1,29 @@
 <title>Space: 1999 -- Character Generator</title>
 <style>
 :root{
-  --void:#05070c;--surface:#0c1119;--panel:#121a26;--card:#182234;--card-ho:#213048;
-  --eagle:#ff7a1a;--eagle-dim:#b8590f;--amber:#ffb84d;--steel:#9fb4cf;--moon:#eef4fb;
-  --dust:#ffffff;--line:#28374f;--good:#4f9d6a;--danger:#c1443f;--psi:#7b52a8;
-  --ff-d:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  /* Moonbase Alpha computer-console palette: matte-black panels, brushed steel,
+     Command red primary, amber CRT readouts, Security purple secondary. */
+  --void:#0a0d12;--surface:#111620;--panel:#161d28;--card:#1d2532;--card-ho:#27313f;
+  --eagle:#e5372b;--eagle-dim:#a52a20;--amber:#ffb23d;--steel:#aebccd;--moon:#f1f6fb;
+  --dust:#ffffff;--line:#31425a;--good:#4bd07f;--danger:#e0483f;--psi:#a06ad6;
+  --dim:#8492a6;--chrome:#5a6e86;--chrome-hi:#7d90a6;--red:#e5372b;--purple:#a06ad6;
+  --ff-d:"Eurostile","Microgramma","Bank Gothic","Agency FB","Square721 BT","Helvetica Neue",Arial,sans-serif;
   --ff-m:"Courier New",Courier,monospace;
   --ff-b:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --r:3px;--tr:.15s ease;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size:16px;line-height:1.5;min-height:100vh}
-::selection{background:var(--eagle);color:var(--void)}
+::selection{background:var(--eagle);color:#fff}
+/* CRT amber glow on data readouts + lit pool cells */
+.pool-rem,.s-v,.al-total:not(.base),.sk-total,.spirit-num,.ah-die{text-shadow:0 0 8px rgba(255,178,61,.4)}
+.die-pip:not(.used){box-shadow:0 0 6px rgba(255,178,61,.45)}
+/* subtle CRT scanlines behind the header + red brand glow */
+.hdr{background-image:linear-gradient(180deg,var(--surface),var(--void)),repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
+.hdr-title{text-shadow:0 0 16px rgba(229,55,43,.45)}
+/* brushed-steel sheen + rounder portal geometry on major containers */
+.dept-card,.panel,.pool-bar,.fblock,.dossier{border-radius:9px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.dept-card.selected{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px var(--eagle-dim)}
 
 /* HEADER */
 .hdr{background:linear-gradient(180deg,var(--surface),var(--void));border-bottom:1px solid var(--line);padding:16px 24px;text-align:center;position:relative}
@@ -23,7 +35,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 
 /* STEP TRACK */
 .step-track{display:flex;justify-content:center;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto}
-.step-item{display:flex;align-items:center;gap:8px;padding:12px 20px;font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:#5a6e88;text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr);cursor:default}
+.step-item{display:flex;align-items:center;gap:8px;padding:12px 20px;font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr);cursor:default}
 .step-item.active{color:var(--eagle);border-bottom-color:var(--eagle)}
 .step-item.done{color:var(--good);border-bottom-color:var(--good)}
 .step-item.clickable{cursor:pointer}
@@ -63,7 +75,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 .pool-label{font-family:var(--ff-m);font-size:12px;letter-spacing:.14em;color:var(--eagle);text-transform:uppercase;white-space:nowrap}
 .pool-dice{display:flex;gap:5px;flex-wrap:wrap}
 .die-pip{width:24px;height:24px;border-radius:3px;border:1px solid var(--eagle);background:var(--eagle);display:flex;align-items:center;justify-content:center;font-family:var(--ff-m);font-size:12px;font-weight:bold;color:var(--void);transition:all var(--tr)}
-.die-pip.used{background:transparent;border-color:var(--line);color:#5a6e88}
+.die-pip.used{background:transparent;border-color:var(--line);color:var(--dim)}
 .pool-rem{font-family:var(--ff-m);font-size:22px;color:var(--eagle);font-weight:bold;margin-left:auto}
 .pool-rem.done{color:var(--good)}
 .pool-rem small{font-size:12px;color:var(--dust);font-weight:normal}
@@ -80,7 +92,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 .al-name .al-sub{font-family:var(--ff-m);font-size:12px;color:var(--dust);margin-left:6px}
 .al-spec{font-family:var(--ff-m);font-size:12px;color:var(--eagle);border:1px solid var(--eagle-dim);border-radius:2px;padding:1px 6px;letter-spacing:.06em;margin-left:6px;text-transform:uppercase}
 .al-total{font-family:var(--ff-m);font-size:19px;color:var(--amber);width:34px;text-align:center;font-weight:bold}
-.al-total.base{color:#5a6e88}
+.al-total.base{color:var(--dim)}
 .stepper{display:flex;gap:4px}
 .sb{width:32px;height:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--steel);font-family:var(--ff-m);font-size:15px;cursor:pointer;transition:all var(--tr)}
 .sb:hover:not(:disabled){background:var(--card-ho);color:var(--moon)}
@@ -133,7 +145,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 .hint{font-size:12px;color:var(--dust);margin-top:6px;line-height:1.4}
 .name-inp{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);color:var(--moon);font-family:var(--ff-d);font-size:20px;padding:11px 13px;outline:none;transition:border-color var(--tr);font-weight:600}
 .name-inp:focus{border-color:var(--eagle)}
-.name-inp::placeholder{color:#4a5c74}
+.name-inp::placeholder{color:var(--dim)}
 .lbl{font-size:13px;color:var(--steel);margin:10px 0 5px;display:block}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{background:var(--surface);border:1px solid var(--line);border-radius:20px;color:var(--dust);font-size:13px;padding:4px 11px;cursor:pointer;transition:all var(--tr)}
@@ -177,7 +189,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 .spirit-pips{display:inline-flex;gap:4px;vertical-align:middle}
 .sp-pip{width:16px;height:16px;border-radius:50%;border:1px solid var(--eagle);background:var(--eagle)}
 
-.footer{text-align:center;padding:26px 20px 40px;font-size:12px;color:#5a6e88;line-height:1.6}
+.footer{text-align:center;padding:26px 20px 40px;font-size:12px;color:var(--dim);line-height:1.6}
 .footer b{color:var(--steel)}
 
 /* PRINT SHEET - official Space: 1999 layout (hidden on screen, shown in print) */
@@ -263,7 +275,7 @@ var ATTITUDES = [
 var ATT_N = {bravery:'Bravery',compassion:'Compassion',dedication:'Dedication',improvisation:'Improvisation',mystery:'Mystery',perseverance:'Perseverance'};
 
 // sleeve colour swatches
-var SL = {black:'#1a1a1a',red:'#c0392b',yellow:'#e6b400',orange:'#ff7a1a',brown:'#8a5a2b',purple:'#7b52a8',white:'#eef4fb',none:'#4a5c74'};
+var SL = {black:'#1a1a1a',red:'#c0392b',yellow:'#e6b400',orange:'#ff7a1a',brown:'#8a5a2b',purple:'#7b52a8',white:'#eef4fb',none:'var(--dim)'};
 
 var DEPTS = [
   {k:'command', n:'Commander / Main Mission', sleeve:'Black (Commander) / Red (Main Mission)', sw:'red',
