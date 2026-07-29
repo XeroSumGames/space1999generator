@@ -1,4 +1,4 @@
-<title>Space: 1999 -- Character Generator</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Space: 1999 -- Character Generator</title>
 <style>
 :root{
   /* Moonbase Alpha bright palette: warm eggshell walls, dark charcoal ink,
@@ -47,6 +47,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 
 /* STEP TRACK */
 .step-track{display:flex;justify-content:center;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto}
+@media(max-width:720px){.step-track{flex-wrap:wrap;overflow-x:visible}}
 .step-item{display:flex;align-items:center;gap:8px;padding:12px 20px;font-family:var(--ff-m);font-size:12px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr);cursor:default}
 .step-item.active{color:var(--eagle);border-bottom-color:var(--eagle)}
 .step-item.done{color:var(--good);border-bottom-color:var(--good)}
