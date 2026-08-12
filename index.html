@@ -145,6 +145,20 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 .bind-sel{font-family:var(--ff-m);font-size:13px;padding:5px 8px}
 .sel option,.bind-sel option{background:var(--surface)}
 
+/* CUSTOM (fill-in) FOCUSES + TALENTS */
+.pick.cust{cursor:default;background:var(--card);border-color:var(--eagle-dim);align-items:flex-start}
+.pick.cust:hover{background:var(--card)}
+.pick.cust .pk-box{background:var(--eagle);border-color:var(--eagle)}
+.pick.add-row{border:1px dashed var(--line);color:var(--dust)}
+.pick.add-row:hover{border-color:var(--eagle-dim);background:var(--panel)}
+.pick.add-row .pk-box{border-style:dashed;color:var(--steel);font-family:var(--ff-m);font-size:14px;line-height:1}
+.cust-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.cust-row .bind-sel{flex:1;margin:0}
+.cust-rm{background:transparent;border:1px solid var(--line);border-radius:var(--r);color:var(--dust);font-family:var(--ff-m);font-size:12px;letter-spacing:.06em;padding:5px 9px;cursor:pointer;transition:all var(--tr);text-transform:uppercase;flex-shrink:0}
+.cust-rm:hover{border-color:var(--rust,#c0392b);color:var(--moon)}
+.cust-desc{margin-top:6px;font-size:13px;padding:6px 9px;resize:vertical;box-sizing:border-box}
+.cust-note{font-size:12px;color:var(--dust);line-height:1.4;padding:7px 9px}
+
 /* FINISHING */
 .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:720px){.fin-grid{grid-template-columns:1fr}}
@@ -240,7 +254,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 @media print{
   @page{size:letter;margin:10mm}
   html,body{background:#fff}
-  .hdr,.step-track,.nav-row,.hdr-rand,.footer,.dossier{display:none!important}
+  .hdr,.step-track,.nav-row,.hdr-rand,.footer,.dossier,.backbar,.no-print,#xsg-ri-open,#xsg-ri-modal{display:none!important}
   .main{max-width:none;margin:0;padding:0}
   #printsheet{display:block!important}
 }
@@ -473,15 +487,20 @@ function attSpent(){ var t=0; for(var k in S.att) t+=S.att[k]; return t; }
 function attValid(){ if(attSpent()!==10) return false; for(var k in S.att){ if(attTotal(k)>8) return false; } return true; }
 function highAtt(){ var c=0; ATTITUDES.forEach(function(a){ if(attTotal(a.k)>=7) c++; }); return c; }
 function spirit(){ var base=4+highAtt(); if(hasTalent('Strong Will')) base+=1; return base; }
-function hasTalent(n){ return S.talents.some(function(t){return t.name===n;}); }
+function hasTalent(n){ return S.talents.some(function(t){return !t.custom && t.name===n;}); }
+
+// ---- custom (fill-in) entries ----
+var CID=0;
+function focusLabel(f){ return f.custom ? (f.name||'').trim() : f.name.replace(/\*$/,'')+(f.star&&f.spec?' ('+f.spec+')':''); }
+function talentInfo(t){ return t.custom ? {n:(t.name||'').trim(), d:(t.desc||'').trim(), tag:null} : (TALENT_M[t.name]||{n:t.name,d:'',tag:null}); }
 
 // ---- focus helpers ----
 function deptFocusSet(){ return DEPT_M[S.dept].focuses.slice(); }
-function focusHasDept(){ var set=deptFocusSet(); return S.focuses.some(function(f){ return set.indexOf(f.name.replace(/\*$/,''))>=0; }); }
-function focusValid(){ return S.focuses.length===4 && focusHasDept() && S.focuses.every(function(f){ return !f.star || (f.spec&&f.spec.trim()); }); }
+function focusHasDept(){ var set=deptFocusSet(); return S.focuses.some(function(f){ return !f.custom && set.indexOf(f.name.replace(/\*$/,''))>=0; }); }
+function focusValid(){ return S.focuses.length===4 && focusHasDept() && S.focuses.every(function(f){ return f.custom ? !!(f.name&&f.name.trim()) : (!f.star || (f.spec&&f.spec.trim())); }); }
 
 // ---- talent helpers ----
-function talentValid(){ return S.talents.length===3 && S.talents.every(function(t){ var td=TALENT_M[t.name]; return !td.tag || (t.bind&&t.bind.trim()); }); }
+function talentValid(){ return S.talents.length===3 && S.talents.every(function(t){ if(t.custom) return !!(t.name&&t.name.trim()); var td=TALENT_M[t.name]; return !td.tag || (t.bind&&t.bind.trim()); }); }
 
 // ---- finishing ----
 function finishValid(){ return !!(S.name.trim() && (S.hope||S.hopeCustom.trim()) && S.traitPro.trim() && S.traitPer.trim()); }
@@ -635,7 +654,7 @@ function renderFocusTalent(){
   var d=DEPT_M[S.dept];
   var deptSet=deptFocusSet();
   var h='<div class="step-intro"><div class="step-h">Step Three &middot; Focuses &amp; Talents</div>'+
-    '<div class="step-p">Pick <b>4 focuses</b> (at least one from your department, shown with a <span style="color:var(--eagle)">&#9670;</span>) and <b>3 talents</b>. Focuses turn any roll of your Skill or lower into a critical success when they apply.</div></div>';
+    '<div class="step-p">Pick <b>4 focuses</b> (at least one from your department, shown with a <span style="color:var(--eagle)">&#9670;</span>) and <b>3 talents</b>. Focuses turn any roll of your Skill or lower into a critical success when they apply. Nothing in the book fit? Use <b>Your Own</b> at the end of either list to write in expertise of your own.</div></div>';
 
   // FOCUS count bar
   var fc=S.focuses.length;
@@ -651,7 +670,7 @@ function renderFocusTalent(){
       var star = /\*$/.test(item);
       var base = item.replace(/\*$/,'');
       var isDept = deptSet.indexOf(base)>=0;
-      var chosen = S.focuses.find(function(f){return f.name===item;});
+      var chosen = S.focuses.find(function(f){return !f.custom && f.name===item;});
       var on=!!chosen;
       var disabled = !on && fc>=4;
       h+='<div class="pick'+(on?' on':'')+(disabled?' disabled':'')+'" onclick="toggleFocus(\''+esc(item).replace(/'/g,"\\'")+'\')">'+
@@ -664,6 +683,27 @@ function renderFocusTalent(){
     });
     h+='</div></div>';
   });
+
+  // YOUR OWN focuses -- write-in expertise the book does not list
+  var custF=S.focuses.filter(function(f){return f.custom;});
+  h+='<div><div class="pick-group"><div class="pg-title">Your Own</div>';
+  custF.forEach(function(f){
+    h+='<div class="pick cust"><div class="pk-box">&#10003;</div><div class="pk-main">'+
+       '<input class="spec-inp cf-inp" style="margin-top:0" placeholder="Name your focus (e.g. Deep-Sea Diving)" value="'+esc(f.name)+'" oninput="custFocusName('+f.cid+',this.value)">'+
+       '<div class="cust-row"><select class="bind-sel" onchange="custFocusSkill('+f.cid+',this.value)">'+
+       SKILLS.map(function(s){return '<option value="'+s.k+'"'+(f.sk===s.k?' selected':'')+'>'+s.n+'</option>';}).join('')+
+       '</select><button class="cust-rm" onclick="removeCustFocus('+f.cid+')">Remove</button></div>'+
+       '</div></div>';
+  });
+  if(fc<4){
+    h+='<div class="pick add-row" onclick="addCustFocus()"><div class="pk-box">+</div>'+
+       '<div class="pk-main"><div class="pk-name">Add your own focus</div>'+
+       '<div class="pk-desc">For expertise outside the book. Choose the Skill it sits under so it prints on the right row.</div></div></div>';
+  } else if(custF.length===0){
+    h+='<div class="cust-note">All 4 focuses are chosen. Deselect one to write in your own.</div>';
+  }
+  if(custF.length){ h+='<div class="cust-note">Write-ins do not satisfy the department focus requirement &#9670; -- one of your four must still come from your department list.</div>'; }
+  h+='</div></div>';
   h+='</div>';
 
   // TALENTS
@@ -677,7 +717,7 @@ function renderFocusTalent(){
   [TALENTS.slice(0,half),TALENTS.slice(half)].forEach(function(col){
     h+='<div>';
     col.forEach(function(t){
-      var chosen=S.talents.find(function(x){return x.name===t.n;});
+      var chosen=S.talents.find(function(x){return !x.custom && x.name===t.n;});
       var on=!!chosen;
       var disabled=!on && tc>=3;
       var sugg = d.talents.indexOf(t.n)>=0;
@@ -697,23 +737,71 @@ function renderFocusTalent(){
     h+='</div>';
   });
   h+='</div>';
+
+  // YOUR OWN talents -- write-in abilities the book does not list
+  var custT=S.talents.filter(function(t){return t.custom;});
+  h+='<div class="pick-group" style="margin-top:14px"><div class="pg-title">Your Own</div>';
+  custT.forEach(function(t){
+    h+='<div class="pick cust"><div class="pk-box">&#10003;</div><div class="pk-main">'+
+       '<input class="spec-inp ct-inp" style="margin-top:0" placeholder="Name your talent (e.g. Ship-Sense)" value="'+esc(t.name)+'" oninput="custTalentName('+t.cid+',this.value)">'+
+       '<textarea class="txt cust-desc" rows="2" placeholder="What it does -- one or two sentences. Agree it with your GM."'+
+       ' oninput="custTalentDesc('+t.cid+',this.value)">'+esc(t.desc||'')+'</textarea>'+
+       '<div class="cust-row"><span class="cust-note" style="padding:0;flex:1">Balance it against the printed talents.</span>'+
+       '<button class="cust-rm" onclick="removeCustTalent('+t.cid+')">Remove</button></div>'+
+       '</div></div>';
+  });
+  if(tc<3){
+    h+='<div class="pick add-row" onclick="addCustTalent()"><div class="pk-box">+</div>'+
+       '<div class="pk-main"><div class="pk-name">Add your own talent</div>'+
+       '<div class="pk-desc">For an ability the book does not cover. Name it, describe it, clear it with your GM.</div></div></div>';
+  } else if(custT.length===0){
+    h+='<div class="cust-note">All 3 talents are chosen. Deselect one to write in your own.</div>';
+  }
+  h+='</div>';
   h+=nav();
   main.innerHTML=h;
 }
 function toggleFocus(name){
-  var i=S.focuses.findIndex(function(f){return f.name===name;});
+  var i=S.focuses.findIndex(function(f){return !f.custom && f.name===name;});
   if(i>=0){ S.focuses.splice(i,1); }
   else { if(S.focuses.length>=4) return; S.focuses.push({name:name, star:/\*$/.test(name), spec:''}); }
   render();
 }
-function focusSpec(name,v){ var f=S.focuses.find(function(x){return x.name===name;}); if(f){ f.spec=v; } }
+function focusSpec(name,v){ var f=S.focuses.find(function(x){return !x.custom && x.name===name;}); if(f){ f.spec=v; } }
 function toggleTalent(name){
-  var i=S.talents.findIndex(function(t){return t.name===name;});
+  var i=S.talents.findIndex(function(t){return !t.custom && t.name===name;});
   if(i>=0){ S.talents.splice(i,1); }
   else { if(S.talents.length>=3) return; S.talents.push({name:name, bind:''}); }
   render();
 }
-function talentBind(name,v){ var t=S.talents.find(function(x){return x.name===name;}); if(t){ t.bind=v; render(); } }
+function talentBind(name,v){ var t=S.talents.find(function(x){return !x.custom && x.name===name;}); if(t){ t.bind=v; render(); } }
+
+// ---- custom (fill-in) focuses + talents ----
+function defaultCustSkill(){
+  if(S.sk6) return S.sk6;
+  var d=DEPT_M[S.dept];
+  if(d && !d.specAny && d.spec.length) return d.spec[0];
+  return 'science';
+}
+function findCust(arr,cid){ return arr.find(function(x){ return x.custom && x.cid===cid; }); }
+function addCustFocus(){
+  if(S.focuses.length>=4) return;
+  S.focuses.push({name:'', star:false, spec:'', custom:true, cid:++CID, sk:defaultCustSkill()});
+  render();
+  var els=document.querySelectorAll('.cf-inp'); if(els.length) els[els.length-1].focus();
+}
+function custFocusName(cid,v){ var f=findCust(S.focuses,cid); if(f){ f.name=v; refreshNav(); } }
+function custFocusSkill(cid,v){ var f=findCust(S.focuses,cid); if(f){ f.sk=v; } }
+function removeCustFocus(cid){ var i=S.focuses.findIndex(function(f){return f.custom && f.cid===cid;}); if(i>=0){ S.focuses.splice(i,1); render(); } }
+function addCustTalent(){
+  if(S.talents.length>=3) return;
+  S.talents.push({name:'', bind:'', desc:'', custom:true, cid:++CID});
+  render();
+  var els=document.querySelectorAll('.ct-inp'); if(els.length) els[els.length-1].focus();
+}
+function custTalentName(cid,v){ var t=findCust(S.talents,cid); if(t){ t.name=v; refreshNav(); } }
+function custTalentDesc(cid,v){ var t=findCust(S.talents,cid); if(t){ t.desc=v; } }
+function removeCustTalent(cid){ var i=S.talents.findIndex(function(t){return t.custom && t.cid===cid;}); if(i>=0){ S.talents.splice(i,1); render(); } }
 
 // ---- STEP 3: FINISHING ----
 function renderFinishing(){
@@ -809,12 +897,17 @@ function renderDossier(){
 
   // Focuses
   h+='<div class="dos-sec"><div class="dos-sec-title">Focuses</div><ul class="dos-list">';
-  S.focuses.forEach(function(f){ var nm=f.name.replace(/\*$/,''); if(f.star&&f.spec) nm+=' ('+f.spec+')'; var dept=deptFocusSet().indexOf(f.name.replace(/\*$/,''))>=0; h+='<li><b>'+esc(nm)+'</b>'+(dept?' &#9670;':'')+'</li>'; });
+  S.focuses.forEach(function(f){
+    var nm=focusLabel(f);
+    var dept=!f.custom && deptFocusSet().indexOf(f.name.replace(/\*$/,''))>=0;
+    var own=f.custom?'<span class="dl-desc">Your own &middot; '+esc(SKILL_N[f.sk]||'')+'</span>':'';
+    h+='<li><b>'+esc(nm||'(unnamed)')+'</b>'+(dept?' &#9670;':'')+own+'</li>';
+  });
   h+='</ul></div>';
 
   // Talents
   h+='<div class="dos-sec"><div class="dos-sec-title">Talents</div><ul class="dos-list">';
-  S.talents.forEach(function(t){ var td=TALENT_M[t.name]; var nm=(td.n||t.name)+(t.bind?' ('+t.bind+')':''); h+='<li><b>'+esc(nm)+'</b><span class="dl-desc">'+td.d+'</span></li>'; });
+  S.talents.forEach(function(t){ var td=talentInfo(t); var nm=(td.n||'(unnamed)')+(t.bind?' ('+t.bind+')':''); h+='<li><b>'+esc(nm)+'</b><span class="dl-desc">'+(t.custom?esc(td.d):td.d)+'</span></li>'; });
   h+='</ul></div>';
 
   // Traits + signature
@@ -839,9 +932,9 @@ function printSheet(){
   var hopeDesc=S.hope ? ((HOPES.find(function(x){return x.n===S.hope;})||{}).d||'') : '';
   var byskill={command:[],flight:[],medical:[],science:[],security:[],technical:[]};
   S.focuses.forEach(function(f){
-    var base=f.name.replace(/\*$/,'');
-    var disp=base+(f.star&&f.spec?' ('+f.spec+')':'');
-    var sk=FOCUS_SKILL[base];
+    var disp=focusLabel(f);
+    if(!disp) return;
+    var sk=f.custom ? f.sk : FOCUS_SKILL[f.name.replace(/\*$/,'')];
     if(sk&&byskill[sk]) byskill[sk].push(disp); else byskill.science.push(disp);
   });
   var deptAssign=esc(d.n)+(S.assignment?'&nbsp;&nbsp;/&nbsp;&nbsp;'+esc(S.assignment):'');
@@ -853,7 +946,7 @@ function printSheet(){
           '<div>'+esc(s.n)+'</div><div class="ps-sc">'+skTotal(s.k)+'</div>'+
           '<div class="ps-foc">'+byskill[s.k].map(esc).join(', ')+'</div></div>';
   }
-  var tal=S.talents.map(function(t){ var td=TALENT_M[t.name]||{}; var nm=(td.n||t.name)+(t.bind?' ('+t.bind+')':''); return '<div class="ps-tal"><b>'+esc(nm)+'</b> '+(td.d||'')+'</div>'; }).join('');
+  var tal=S.talents.map(function(t){ var td=talentInfo(t); var nm=(td.n||'')+(t.bind?' ('+t.bind+')':''); if(!nm.trim()) return ''; return '<div class="ps-tal"><b>'+esc(nm)+'</b> '+(t.custom?esc(td.d||''):(td.d||''))+'</div>'; }).join('');
   var h='<div class="ps-page">';
   h+='<div class="ps-head"><div class="ps-headL">'+
      '<div class="ps-nrow">'+
@@ -997,9 +1090,9 @@ syncThemeButtons();
 })();
 </script>
 <!-- Back to The Table (slim bar prepended to the top, so it never overlaps the generator's own header controls) -->
-<script>(function(){var a=document.createElement('a');a.href='https://thetable.xerosumgames.com/';a.textContent='← The Table';a.style.cssText='display:block;background:#0e0e10;color:#e8e5dd;font:600 14px system-ui,sans-serif;text-decoration:none;padding:9px 14px;border-bottom:1px solid #2a2a30';document.body.insertBefore(a,document.body.firstChild);})();</script>
+<script>(function(){var a=document.createElement('a');a.className='backbar no-print';a.href='https://thetable.xerosumgames.com/';a.textContent='← The Table';a.style.cssText='display:block;background:#0e0e10;color:#e8e5dd;font:600 14px system-ui,sans-serif;text-decoration:none;padding:9px 14px;border-bottom:1px solid #2a2a30';document.body.insertBefore(a,document.body.firstChild);})();</script>
 <!-- Report an issue (Xero Sum Games) -->
-<div style="text-align:center;padding:28px 16px 40px;">
+<div class="no-print" style="text-align:center;padding:28px 16px 40px;">
   <button type="button" id="xsg-ri-open" style="background:#16161a;border:1px solid #3a3a42;color:#e8e5dd;font:600 14px system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;padding:10px 20px;border-radius:9px;cursor:pointer;letter-spacing:.02em;">Report an issue</button>
 </div>
 <div id="xsg-ri-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.66);align-items:center;justify-content:center;padding:16px;">
