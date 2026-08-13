@@ -1,4 +1,18 @@
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Space: 1999 -- Character Generator</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Space: 1999 RPG Character Generator | Xero Sum Games</title>
+<link rel="canonical" href="https://thetable.xerosumgames.com/space1999">
+<meta name="description" content="Free character generator for the Space: 1999 roleplaying game (Modiphius 2d20). Build a Moonbase Alpha character in your browser and print the official-style sheet. No signup.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Xero Sum Games">
+<meta property="og:title" content="Space: 1999 RPG Character Generator">
+<meta property="og:description" content="Free character generator for the Space: 1999 roleplaying game (Modiphius 2d20). Build a Moonbase Alpha character in your browser and print the official-style sheet. No signup.">
+<meta property="og:url" content="https://thetable.xerosumgames.com/space1999">
+<meta property="og:image" content="https://thetable.xerosumgames.com/gen-space1999.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Space: 1999 RPG Character Generator">
+<meta name="twitter:description" content="Free character generator for the Space: 1999 roleplaying game (Modiphius 2d20). Build a Moonbase Alpha character in your browser and print the official-style sheet. No signup.">
+<meta name="twitter:image" content="https://thetable.xerosumgames.com/gen-space1999.jpg">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Space: 1999 RPG Character Generator","url":"https://thetable.xerosumgames.com/space1999","applicationCategory":"GameApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free character generator for the Space: 1999 roleplaying game (Modiphius 2d20). Build a Moonbase Alpha character in your browser and print the official-style sheet. No signup."}</script>
+
 <style>
 :root{
   /* Moonbase Alpha bright palette: warm eggshell walls, dark charcoal ink,
@@ -29,7 +43,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 :root[data-theme="dark"] .roll-btn{color:var(--amber)}
 :root[data-theme="dark"] .die-pip:not(.used){box-shadow:0 0 6px rgba(255,178,61,.45)}
 :root[data-theme="dark"] .hdr{background:linear-gradient(180deg,var(--surface),var(--void)),repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
-:root[data-theme="dark"] .hdr-title{text-shadow:0 0 16px rgba(229,55,43,.45)}
+:root[data-theme="dark"] .hdr-title{margin:0;text-shadow:0 0 16px rgba(229,55,43,.45)}
 :root[data-theme="dark"] .dept-card,:root[data-theme="dark"] .panel,:root[data-theme="dark"] .pool-bar,:root[data-theme="dark"] .fblock,:root[data-theme="dark"] .dossier{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 :root[data-theme="dark"] .dept-card.selected{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px var(--eagle-dim)}
 /* ==== UNIFORM TITLE BAR (shared spec across Xero Sum Games generators) ==== */
@@ -266,7 +280,7 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
     <button class="tt-btn" data-tv="light" onclick="setTheme('light')">Light</button>
     <button class="tt-btn" data-tv="dark" onclick="setTheme('dark')">Dark</button>
   </div>
-  <div class="hdr-title">Space: 1999</div>
+  <h1 class="hdr-title">Space: 1999</h1>
   <div class="hdr-sub">Moonbase Alpha &middot; Personnel Dossier Generator</div>
   <button class="hdr-rand" onclick="randomiseAll()">&#9862; Randomise</button>
 </div>
@@ -276,6 +290,8 @@ body{background:var(--void);color:var(--steel);font-family:var(--ff-b);font-size
 <div class="main" id="main"></div>
 
 <div class="footer">
+  <p class="seo-intro">A free, browser-based character generator for the Space: 1999 roleplaying game on the Modiphius 2d20 system. Pick a department, allocate skills and attitudes, choose focuses and talents, and print a finished dossier.</p>
+
   <div><b>Space: 1999 -- Character Generator.</b> An unofficial fan tool.</div>
   <div class="no-print" id="copyright" style="margin-top:5px">Space: 1999 (TM) and (c) ITC Entertainment Group 1975 and 2025, licensed by ITV Studios Limited. All Rights Reserved. Space: 1999 The Roleplaying Game is published by Anderson Entertainment; the 2d20 system is (c) Modiphius Entertainment Ltd. This is an unofficial, fan-made character generator, not affiliated with or endorsed by the rights holders. All game rules and content remain the property of their respective owners.</div>
 </div>
